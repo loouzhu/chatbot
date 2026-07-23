@@ -7,4 +7,10 @@ export default defineConfig({
     port: 5173,
     strictPort: false,
   },
+  css: {
+    modules: {
+      localsConvention: "camelCaseOnly",
+      generateScopedName: "[name]__[local]___[hash:base64:5]",
+    },
+  },
 });
