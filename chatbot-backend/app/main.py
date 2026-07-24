@@ -55,24 +55,6 @@ def generate_ai_response(message: str) -> str:
 # --- FastAPI App ---
 app = FastAPI(title="AI Chatbot API", description="API for interacting with a DeepSeek chatbot.", version="1.0.0")
 
-# --- CORS Configuration ---
-origins = [
-    "http://localhost:5173",  # Development frontend
-    # Add your deployed frontend URL here (e.g., "https://your-deployed-app.com")
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["POST", "GET"],  # Only allow necessary methods
-    allow_headers=["*"],
-)
-
-# --- Data Models ---
-class ChatInput(BaseModel):
-    user_message: str
-
 # --- API Endpoints ---
 @app.get("/", tags=["Health"])
 async def health_check():
@@ -91,3 +73,24 @@ async def chat(chat_input: ChatInput):
         return {"response": response_text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating content: {e}")
+
+
+
+# --- CORS Configuration ---
+origins = [
+    "http://localhost:5173",  # Development frontend
+    # Add your deployed frontend URL here (e.g., "https://your-deployed-app.com")
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["POST", "GET"],  # Only allow necessary methods
+    allow_headers=["*"],
+)
+
+# --- Data Models ---
+class ChatInput(BaseModel):
+    user_message: str
+
