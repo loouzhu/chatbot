@@ -1,7 +1,8 @@
-import { ChatPanel } from "@chat/components/ChatPanel";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./routers";
 
 function App() {
-  return <ChatPanel />;
+  return <RouterProvider router={router} />;
 }
 
 export default App;

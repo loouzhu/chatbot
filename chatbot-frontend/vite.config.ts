@@ -18,7 +18,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@chat": path.resolve(__dirname, "./src/features/chat"),
-      "@user": path.resolve(__dirname, "./src/features/user"),
+      "@auth": path.resolve(__dirname, "./src/features/auth"),
     },
   },
 });
