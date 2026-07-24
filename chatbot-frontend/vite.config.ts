@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
@@ -11,6 +12,13 @@ export default defineConfig({
     modules: {
       localsConvention: "camelCaseOnly",
       generateScopedName: "[name]__[local]___[hash:base64:5]",
+    },
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      "@chat": path.resolve(__dirname, "./src/features/chat"),
+      "@user": path.resolve(__dirname, "./src/features/user"),
     },
   },
 });
