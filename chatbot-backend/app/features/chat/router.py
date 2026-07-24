@@ -3,12 +3,12 @@ from app.features.chat.service import ChatService
 from app.integrations.deepseek.client import DeepSeekClient, DeepSeekError
 from fastapi import APIRouter, HTTPException
 
-router = APIRouter(prefix="/chat", tags=["Chat"])
+chat_router = APIRouter(prefix="/chat", tags=["Chat"])
 
 chat_service = ChatService(DeepSeekClient())
 
 
-@router.post("", response_model=ChatResponse)
+@chat_router.post("", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> ChatResponse:
     try:
         response = await chat_service.send_message(request.user_message)
