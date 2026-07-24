@@ -57,13 +57,13 @@ export function useChat() {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Could not connect to the bot. Please try again.";
+          : "暂时无法连接到 AI 助手，请稍后重试。";
 
       setChatLog((prevChatLog) => [
         ...prevChatLog,
         {
           type: "error",
-          text: `Error: ${errorMessage}`,
+          text: errorMessage,
         },
       ]);
     } finally {
