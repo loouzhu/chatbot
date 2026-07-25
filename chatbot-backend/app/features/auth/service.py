@@ -1,7 +1,15 @@
+import random
+
 from app.core.exceptions import AppException
 from app.core.security import hash_password
+from app.db.redis import redis_client
 from app.features.auth.repository import AuthRepository
-from app.features.auth.schemas import RegisterRequest, RegisterResponse
+from app.features.auth.schemas import (
+    RegisterRequest,
+    RegisterResponse,
+    SendEmailRequest,
+)
+from app.integrations.email.client import EmailClient
 
 
 class AuthException(AppException):
@@ -9,8 +17,24 @@ class AuthException(AppException):
         super().__init__(message, status_code)
 
 
-async def send_code() -> int:
-    return 1
+def generate_code() -> int:
+    verify_code = random.randint(100000, 999999)
+    redis_client.set(name="verify_code", value=verify_code, ex=300)
+    return verify_code
+
+
+async def send_verify_code(request: SendEmailRequest):
+    try:
+        verify_code = generate_code()
+        email_client = EmailClient()
+        await email_client.send_mail(
+            to_address=request.to_address,
+            username=request.username,
+            code=verify_code,
+        )
+    except Exception:
+        redis_client.delete("verify_code")
+        raise AuthException("发送邮件失败", 500)
 
 
 async def register_user(request: RegisterRequest, db) -> RegisterResponse:
@@ -19,7 +43,7 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
         username = request.username
         email = str(request.email)
         password_hash = hash_password(request.password)
-        verify_code = await send_code()
+        verify_code = redis_client.get("verify_code")
 
         if repository.get_user_by_email(request.email):
             raise AuthException("邮箱已被注册")

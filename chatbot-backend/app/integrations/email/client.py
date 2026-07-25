@@ -20,9 +20,7 @@ class EmailClient:
         self.client = DmClient(config)
         self.template_path = Path(__file__).with_name("templates") / ""
 
-    async def send_mail(
-        self, to_address: str, subject: str, html_body: str, username: str, code: int
-    ):
+    async def send_mail(self, to_address: str, username: str, code: int):
         template_path = self.template_path / "register.html"
         html = template_path.read_text(encoding="utf-8")
         html = html.replace("{{username}}", username)
@@ -32,8 +30,8 @@ class EmailClient:
             address_type=1,
             reply_to_address=False,
             to_address=to_address,
-            subject=subject,
-            html_body=html_body,
+            subject="验证码",
+            html_body=html,
             text_body="",
         )
 
