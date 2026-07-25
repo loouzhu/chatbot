@@ -1,3 +1,4 @@
+from app.core.exceptions import ValidationException
 from app.integrations.deepseek.client import DeepSeekClient
 
 
@@ -8,5 +9,5 @@ class ChatService:
     async def send_message(self, user_message: str) -> str:
         message = user_message.strip()
         if not message:
-            raise ValueError("发送内容不能为空")
+            raise ValidationException("发送内容不能为空")
         return await self.deepseek_client.ask(message)

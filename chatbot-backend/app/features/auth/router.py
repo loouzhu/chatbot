@@ -1,12 +1,21 @@
+from app.db.session import get_db
 from app.features.auth.schemas import RegisterRequest, RegisterResponse
-from app.features.auth.service import register_user
-from fastapi import APIRouter, status
+from app.features.auth.service import register_user, send_code
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.orm import Session
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@auth_router.post("/send_verify_code")
+async def send_verify_code() -> int:
+    return await send_code()
 
 
 @auth_router.post(
     "/register", status_code=status.HTTP_201_CREATED, response_model=RegisterResponse
 )
-async def register(request: RegisterRequest) -> RegisterResponse:
-    return await register_user(request)
+async def register(
+    request: RegisterRequest, db: Session = Depends(get_db)
+) -> RegisterResponse:
+    return await register_user(request, db)

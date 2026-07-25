@@ -1,32 +1,38 @@
-from app.core.expectionos import AppException
-from app.db.session import SessionLocal
+from app.core.exceptions import AppException
+from app.core.security import hash_password
 from app.features.auth.repository import AuthRepository
 from app.features.auth.schemas import RegisterRequest, RegisterResponse
-from passlib.context import CryptContext
 
 
-class authException(AppException):
-    pass
+class AuthException(AppException):
+    def __init__(self, message: str, status_code: int = 400):
+        super().__init__(message, status_code)
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+async def send_code() -> int:
+    return 1
 
 
-async def register_user(request: RegisterRequest) -> RegisterResponse:
-    db = SessionLocal()
+async def register_user(request: RegisterRequest, db) -> RegisterResponse:
     try:
         repository = AuthRepository(db)
+        username = request.username
+        email = str(request.email)
+        password_hash = hash_password(request.password)
+        verify_code = await send_code()
 
         if repository.get_user_by_email(request.email):
-            raise authException("邮箱已被注册")
+            raise AuthException("邮箱已被注册")
 
         if repository.get_user_by_username(request.username):
-            raise authException("用户名已被占用")
+            raise AuthException("用户名已被占用")
 
-        password_hash = pwd_context.hash(request.password)
+        if request.verify_code != str(verify_code):
+            raise AuthException("验证码不正确")
+
         user = repository.create_user(
-            email=str(request.email),
-            username=request.username,
+            email=email,
+            username=username,
             password_hash=password_hash,
         )
 
@@ -38,3 +44,6 @@ async def register_user(request: RegisterRequest) -> RegisterResponse:
         )
     finally:
         db.close()
+
+
+# async def login_user(request:LoginRequest) -> LoginResponse:

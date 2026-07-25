@@ -1,4 +1,4 @@
-from app.core.expectionos import ValidationException
+from app.core.exceptions import ValidationException
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
@@ -7,7 +7,7 @@ class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=20)
     password: str = Field(..., min_length=6, max_length=64)
     confirm_password: str = Field(..., min_length=6, max_length=64)
-    email_code: str
+    verify_code: str = Field(..., min_length=6, max_length=6)
 
     @field_validator("username")
     @classmethod
@@ -23,6 +23,7 @@ class RegisterRequest(BaseModel):
             raise ValidationException("密码长度应为6-64个字符")
         return v
 
+    # 跨字段验证使用model_validator
     @model_validator(mode="after")
     def validate_confirm_password(self) -> "RegisterRequest":
         if self.password != self.confirm_password:
@@ -37,3 +38,8 @@ class RegisterResponse(BaseModel):
     email: str
     username: str
     message: str
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=6, max_length=64)

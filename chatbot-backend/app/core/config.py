@@ -17,6 +17,8 @@ class Settings:
     ALIBABA_CLOUD_ACCESS_KEY_SECRET: str
     ALIYUN_DM_ACCOUNT: str
     ALIYUN_DM_ENDPOINT: str
+    REDIS_HOST: str
+    REDIS_PORT: int
     frontend_origin: str
 
 
@@ -36,6 +38,8 @@ def get_settings() -> Settings:
         ).strip(),
         ALIYUN_DM_ACCOUNT=os.getenv("ALIYUN_DM_ACCOUNT", "").strip(),
         ALIYUN_DM_ENDPOINT=os.getenv("ALIYUN_DM_ENDPOINT", "").strip(),
+        REDIS_HOST=os.getenv("REDIS_HOST", "localhost").strip(),
+        REDIS_PORT=int(os.getenv("REDIS_PORT", 6379)),
         frontend_origin=os.getenv("FRONTEND_ORIGIN", "http://localhost:5173").strip(),
     )
 

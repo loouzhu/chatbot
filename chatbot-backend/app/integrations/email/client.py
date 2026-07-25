@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from alibabacloud_credentials.client import Client as CredentialClient
 from alibabacloud_dm20151123 import models as dm_models
 from alibabacloud_dm20151123.client import Client as DmClient
@@ -16,9 +18,15 @@ class EmailClient:
         config.endpoint = settings.ALIYUN_DM_ENDPOINT
 
         self.client = DmClient(config)
+        self.template_path = Path(__file__).with_name("templates") / ""
 
-    async def send_mail(self, to_address: str, subject: str, html_body: str):
-
+    async def send_mail(
+        self, to_address: str, subject: str, html_body: str, username: str, code: int
+    ):
+        template_path = self.template_path / "register.html"
+        html = template_path.read_text(encoding="utf-8")
+        html = html.replace("{{username}}", username)
+        html = html.replace("{{code}}", str(code))
         request = dm_models.SingleSendMailRequest(
             account_name=settings.ALIYUN_DM_ACCOUNT,
             address_type=1,
