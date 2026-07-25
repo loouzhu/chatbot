@@ -13,19 +13,30 @@ class Settings:
     DEEPSEEK_API_URL: str
     DEEPSEEK_MODEL: str
     DATABASE_URL: str
+    ALIBABA_CLOUD_ACCESS_KEY_ID: str
+    ALIBABA_CLOUD_ACCESS_KEY_SECRET: str
+    ALIYUN_DM_ACCOUNT: str
+    ALIYUN_DM_ENDPOINT: str
     frontend_origin: str
 
 
 def get_settings() -> Settings:
     return Settings(
         DEEPSEEK_API_KEY=os.getenv("DEEPSEEK_API_KEY", "").strip(),
-        DEEPSEEK_API_URL=os.getenv("DEEPSEEK_API_URL", "").strip(),
-        DEEPSEEK_MODEL=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
+        DEEPSEEK_API_URL=(
+            os.getenv("DEEPSEEK_API_URL") or os.getenv("DEEPSEEK_BASE_URL", "")
+        ).strip(),
+        DEEPSEEK_MODEL=os.getenv("DEEPSEEK_MODEL", "deepseek-chat").strip(),
         DATABASE_URL=os.getenv("DATABASE_URL", "").strip(),
-        frontend_origin=os.getenv(
-            "FRONTEND_ORIGIN",
-            "http://localhost:5173",
-        ),
+        ALIBABA_CLOUD_ACCESS_KEY_ID=os.getenv(
+            "ALIBABA_CLOUD_ACCESS_KEY_ID", ""
+        ).strip(),
+        ALIBABA_CLOUD_ACCESS_KEY_SECRET=os.getenv(
+            "ALIBABA_CLOUD_ACCESS_KEY_SECRET", ""
+        ).strip(),
+        ALIYUN_DM_ACCOUNT=os.getenv("ALIYUN_DM_ACCOUNT", "").strip(),
+        ALIYUN_DM_ENDPOINT=os.getenv("ALIYUN_DM_ENDPOINT", "").strip(),
+        frontend_origin=os.getenv("FRONTEND_ORIGIN", "http://localhost:5173").strip(),
     )
 
 

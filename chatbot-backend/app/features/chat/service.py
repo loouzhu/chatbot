@@ -9,4 +9,4 @@ class ChatService:
         message = user_message.strip()
         if not message:
             raise ValueError("发送内容不能为空")
-        return await self.deepseek_client.generate_response(message)
+        return await self.deepseek_client.ask(message)
