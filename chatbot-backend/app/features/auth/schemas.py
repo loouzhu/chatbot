@@ -39,19 +39,30 @@ class RegisterResponse(BaseModel):
     message: str
 
 
-class LoginRequest(BaseModel):
+class EmailLoginRequest(BaseModel):
     email: EmailStr
+    verify_code: str = Field(..., min_length=6, max_length=6)
+
+
+class EmailLoginResponse(BaseModel):
+    email: str
+    message: str
+
+
+class UsernameLoginRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=20)
     password: str = Field(..., min_length=6, max_length=64)
 
 
-class LoginResponse(BaseModel):
-    pass
+class UsernameLoginResponse(BaseModel):
+    username: str
+    message: str
 
 
 class SendVerifyCodeRequest(BaseModel):
     email: EmailStr
     username: str
-    code: int
+    code: str
 
 
 class SendVerifyCodeResponse(BaseModel):

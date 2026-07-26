@@ -6,17 +6,27 @@ from app.core.security import hash_code
 from app.db.redis import redis_client
 from app.features.auth.repository import AuthRepository
 from app.features.auth.schemas import (
+    EmailLoginRequest,
+    EmailLoginResponse,
     RegisterRequest,
     RegisterResponse,
     SendVerifyCodeRequest,
     SendVerifyCodeResponse,
+    UsernameLoginRequest,
+    UsernameLoginResponse,
 )
 from app.integrations.email.client import EmailClient
+from passlib.context import CryptContext
 
 
 class AuthException(AppException):
     def __init__(self, message: str, status_code: int = 400, code: int = -1):
         super().__init__(message, status_code, code)
+
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    return pwd_context.verify(password, hashed_password)
 
 
 def generate_code(email: str) -> str:
@@ -87,4 +97,48 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
         db.close()
 
 
-# async def login_user(request:LoginRequest) -> LoginResponse:
+async def email_login_user(request: EmailLoginRequest, db) -> EmailLoginResponse:
+    try:
+        repository = AuthRepository(db)
+        email = str(request.email)
+        verify_code = redis_client.get(verify_code_key("auth", "login", email))
+        user = repository.get_user_by_email(email)
+
+        if not user:
+            raise AuthException("未注册的邮箱", 401, 1003)
+
+        if request.verify_code != str(verify_code):
+            raise AuthException("验证码不正确", 400, 1005)
+
+        redis_client.delete(verify_code_key("auth", "login", email))
+        return EmailLoginResponse(
+            email=user.email,
+            message="登录成功",
+        )
+    except Exception:
+        raise AuthException("邮箱登录失败", 500, 1007)
+    finally:
+        db.close()
+
+
+async def username_login_user(
+    request: UsernameLoginRequest, db
+) -> UsernameLoginResponse:
+    try:
+        repository = AuthRepository(db)
+        user = repository.get_user_by_username(request.username)
+
+        if not user:
+            raise AuthException("用户不存在", 401, 1008)
+
+        if not verify_password(request.password, user.password_hash):
+            raise AuthException("用户名或密码错误", 401, 1009)
+
+        return UsernameLoginResponse(
+            username=user.username,
+            message="登录成功",
+        )
+    except Exception:
+        raise AuthException("用户名密码登录失败", 500, 1010)
+    finally:
+        db.close()

@@ -2,8 +2,18 @@ from types import SimpleNamespace
 
 import pytest
 from app.cache.verify_code import send_limit_key, verify_code_key
-from app.features.auth.schemas import RegisterRequest, SendVerifyCodeRequest
-from app.features.auth.service import register_user, send_verify_code
+from app.features.auth.schemas import (
+    EmailLoginRequest,
+    RegisterRequest,
+    SendVerifyCodeRequest,
+    UsernamePasswordLoginRequest,
+)
+from app.features.auth.service import (
+    email_login_user,
+    register_user,
+    send_verify_code,
+    username_password_login_user,
+)
 
 
 @pytest.mark.asyncio
@@ -103,7 +113,7 @@ async def test_send_verify_code_uses_email_client(monkeypatch):
     monkeypatch.setattr("app.features.auth.service.generate_code", fake_generate_code)
 
     request = SendVerifyCodeRequest(
-        email="test@example.com", username="alice", code=123456
+        email="test@example.com", username="alice", code="123456"
     )
     result = await send_verify_code(request)
 
@@ -121,3 +131,74 @@ async def test_send_verify_code_uses_email_client(monkeypatch):
     assert (
         redis_client.get(send_limit_key("auth", "register", "test@example.com")) == "1"
     )
+
+
+@pytest.mark.asyncio
+async def test_email_login_user_uses_verify_code(monkeypatch):
+    class DummyRepository:
+        def __init__(self, db):
+            self.db = db
+
+        def get_user_by_email(self, email):
+            return SimpleNamespace(
+                email="test@example.com",
+                username="alice",
+                password_hash="hashed",
+            )
+
+    monkeypatch.setattr("app.features.auth.service.AuthRepository", DummyRepository)
+
+    class DummyRedis:
+        def __init__(self):
+            self.store = {}
+
+        def get(self, name):
+            return self.store.get(name)
+
+        def set(self, name, value, ex=None, nx=None):
+            self.store[name] = value
+
+        def delete(self, name):
+            self.store.pop(name, None)
+
+    redis_client = DummyRedis()
+    redis_client.set(verify_code_key("auth", "login", "test@example.com"), "123456")
+    monkeypatch.setattr("app.features.auth.service.redis_client", redis_client)
+
+    request = EmailLoginRequest(email="test@example.com", verify_code="123456")
+    db = SimpleNamespace(close=lambda: None, commit=lambda: None)
+
+    result = await email_login_user(request, db)
+
+    assert result.email == "test@example.com"
+    assert result.username == "alice"
+    assert result.message == "登录成功"
+
+
+@pytest.mark.asyncio
+async def test_username_password_login_user_uses_password(monkeypatch):
+    class DummyRepository:
+        def __init__(self, db):
+            self.db = db
+
+        def get_user_by_username(self, username):
+            return SimpleNamespace(
+                email="tester@example.com",
+                username="tester",
+                password_hash="hashed",
+            )
+
+    monkeypatch.setattr("app.features.auth.service.AuthRepository", DummyRepository)
+    monkeypatch.setattr(
+        "app.features.auth.service.verify_password",
+        lambda password, hashed: True,
+    )
+
+    request = UsernamePasswordLoginRequest(username="tester", password="123456")
+    db = SimpleNamespace(close=lambda: None, commit=lambda: None)
+
+    result = await username_password_login_user(request, db)
+
+    assert result.email == "tester@example.com"
+    assert result.username == "tester"
+    assert result.message == "登录成功"
