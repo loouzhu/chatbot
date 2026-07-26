@@ -44,7 +44,7 @@ async def test_register_user_creates_user_with_hashed_password(monkeypatch):
             self.store.pop(name, None)
 
     redis_client = DummyRedis()
-    redis_client.set(verify_code_key("test@example.com"), "123456")
+    redis_client.set(verify_code_key("auth", "register", "test@example.com"), "123456")
     monkeypatch.setattr("app.features.auth.service.redis_client", redis_client)
 
     request = RegisterRequest(
@@ -96,8 +96,8 @@ async def test_send_verify_code_uses_email_client(monkeypatch):
     monkeypatch.setattr("app.features.auth.service.redis_client", redis_client)
 
     def fake_generate_code(email: str) -> str:
-        redis_client.set(verify_code_key(email), "123456")
-        redis_client.set(send_limit_key(email), "1", ex=60, nx=True)
+        redis_client.set(verify_code_key("auth", "register", email), "123456")
+        redis_client.set(send_limit_key("auth", "register", email), "1", ex=60, nx=True)
         return "123456"
 
     monkeypatch.setattr("app.features.auth.service.generate_code", fake_generate_code)
@@ -114,5 +114,10 @@ async def test_send_verify_code_uses_email_client(monkeypatch):
     assert captured["email"] == "test@example.com"
     assert captured["username"] == "alice"
     assert captured["code"] == "123456"
-    assert redis_client.get(verify_code_key("test@example.com")) == "123456"
-    assert redis_client.get(send_limit_key("test@example.com")) == "1"
+    assert (
+        redis_client.get(verify_code_key("auth", "register", "test@example.com"))
+        == "123456"
+    )
+    assert (
+        redis_client.get(send_limit_key("auth", "register", "test@example.com")) == "1"
+    )

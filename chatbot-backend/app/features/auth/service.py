@@ -21,8 +21,8 @@ class AuthException(AppException):
 
 def generate_code(email: str) -> str:
     verify_code = str(random.randint(100000, 999999))
-    code_key = verify_code_key(email)
-    limit_key = send_limit_key(email)
+    code_key = verify_code_key("auth", "register", email)
+    limit_key = send_limit_key("auth", "register", email)
 
     if redis_client.get(limit_key):
         raise AuthException("请稍后再试", 400, 1001)
@@ -48,7 +48,7 @@ async def send_verify_code(request: SendVerifyCodeRequest):
             message="发送验证码成功",
         )
     except Exception:
-        redis_client.delete(verify_code_key(str(request.email)))
+        redis_client.delete(verify_code_key("auth", "register", str(request.email)))
         raise AuthException("发送验证码失败", 500, 1002)
 
 
@@ -58,7 +58,7 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
         username = request.username
         email = str(request.email)
         password_hash = hash_code(request.password)
-        verify_code = redis_client.get(verify_code_key(email))
+        verify_code = redis_client.get(verify_code_key("auth", "register", email))
 
         if repository.get_user_by_email(request.email):
             raise AuthException("邮箱已被注册", 409, 1003)
@@ -75,7 +75,7 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
             password_hash=password_hash,
         )
         db.commit()
-        redis_client.delete(verify_code_key(email))
+        redis_client.delete(verify_code_key("auth", "register", email))
         return RegisterResponse(
             email=user.email,
             username=user.username,
