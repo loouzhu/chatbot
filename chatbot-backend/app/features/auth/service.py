@@ -15,8 +15,8 @@ from app.integrations.email.client import EmailClient
 
 
 class AuthException(AppException):
-    def __init__(self, message: str, status_code: int = 400):
-        super().__init__(message, status_code)
+    def __init__(self, message: str, status_code: int = 400, code: int = -1):
+        super().__init__(message, status_code, code)
 
 
 def generate_code(email: str) -> str:
@@ -25,7 +25,7 @@ def generate_code(email: str) -> str:
     limit_key = send_limit_key(email)
 
     if redis_client.get(limit_key):
-        raise AuthException("请稍后再试", 400)
+        raise AuthException("请稍后再试", 400, 1001)
 
     redis_client.set(name=code_key, value=verify_code, ex=300, nx=True)
     redis_client.set(name=limit_key, value="1", ex=60, nx=True)
@@ -49,7 +49,7 @@ async def send_verify_code(request: SendVerifyCodeRequest):
         )
     except Exception:
         redis_client.delete(verify_code_key(str(request.email)))
-        raise AuthException("发送验证码失败", 500)
+        raise AuthException("发送验证码失败", 500, 1002)
 
 
 async def register_user(request: RegisterRequest, db) -> RegisterResponse:
@@ -61,13 +61,13 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
         verify_code = redis_client.get(verify_code_key(email))
 
         if repository.get_user_by_email(request.email):
-            raise AuthException("邮箱已被注册")
+            raise AuthException("邮箱已被注册", 409, 1003)
 
         if repository.get_user_by_username(request.username):
-            raise AuthException("用户名已被占用")
+            raise AuthException("用户名已被占用", 409, 1004)
 
         if request.verify_code != str(verify_code):
-            raise AuthException("验证码不正确")
+            raise AuthException("验证码不正确", 400, 1005)
 
         user = repository.create_user(
             email=email,
@@ -82,7 +82,7 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
             message="注册成功",
         )
     except Exception:
-        raise AuthException("创建用户失败", 500)
+        raise AuthException("创建用户失败", 500, 1006)
     finally:
         db.close()
 

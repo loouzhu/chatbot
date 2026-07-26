@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 from app.cache.verify_code import send_limit_key, verify_code_key
-from app.features.auth.schemas import RegisterRequest, SendEmailRequest
+from app.features.auth.schemas import RegisterRequest, SendVerifyCodeRequest
 from app.features.auth.service import register_user, send_verify_code
 
 
@@ -102,10 +102,15 @@ async def test_send_verify_code_uses_email_client(monkeypatch):
 
     monkeypatch.setattr("app.features.auth.service.generate_code", fake_generate_code)
 
-    request = SendEmailRequest(email="test@example.com", username="alice", code=123456)
+    request = SendVerifyCodeRequest(
+        email="test@example.com", username="alice", code=123456
+    )
     result = await send_verify_code(request)
 
-    assert result == {"ok": True}
+    assert result.email == "test@example.com"
+    assert result.username == "alice"
+    assert result.code == 200
+    assert result.message == "发送验证码成功"
     assert captured["email"] == "test@example.com"
     assert captured["username"] == "alice"
     assert captured["code"] == "123456"
