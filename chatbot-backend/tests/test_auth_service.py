@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import pytest
+from app.cache.verify_code import send_limit_key, verify_code_key
 from app.features.auth.schemas import RegisterRequest, SendEmailRequest
 from app.features.auth.service import register_user, send_verify_code
 
@@ -26,9 +27,25 @@ async def test_register_user_creates_user_with_hashed_password(monkeypatch):
 
     monkeypatch.setattr("app.features.auth.service.AuthRepository", DummyRepository)
     monkeypatch.setattr(
-        "app.features.auth.service.hash_password", lambda password: "hashed"
+        "app.features.auth.service.hash_code", lambda password: "hashed"
     )
-    monkeypatch.setattr("app.features.auth.service.generate_code", lambda: 123456)
+
+    class DummyRedis:
+        def __init__(self):
+            self.store = {}
+
+        def get(self, name):
+            return self.store.get(name)
+
+        def set(self, name, value, ex=None, nx=None):
+            self.store[name] = value
+
+        def delete(self, name):
+            self.store.pop(name, None)
+
+    redis_client = DummyRedis()
+    redis_client.set(verify_code_key("test@example.com"), "123456")
+    monkeypatch.setattr("app.features.auth.service.redis_client", redis_client)
 
     request = RegisterRequest(
         email="test@example.com",
@@ -37,7 +54,7 @@ async def test_register_user_creates_user_with_hashed_password(monkeypatch):
         confirm_password="123456",
         verify_code="123456",
     )
-    db = SimpleNamespace(close=lambda: None)
+    db = SimpleNamespace(close=lambda: None, commit=lambda: None)
 
     result = await register_user(request, db)
 
@@ -54,21 +71,43 @@ async def test_send_verify_code_uses_email_client(monkeypatch):
         def __init__(self):
             pass
 
-        async def send_mail(self, to_address: str, username: str, code: int):
-            captured["to_address"] = to_address
+        async def send_mail(self, email: str, username: str, code: int):
+            captured["email"] = email
             captured["username"] = username
             captured["code"] = code
             return {"ok": True}
 
     monkeypatch.setattr("app.features.auth.service.EmailClient", DummyEmailClient)
-    monkeypatch.setattr("app.features.auth.service.generate_code", lambda: 123456)
 
-    request = SendEmailRequest(
-        to_address="test@example.com", username="alice", code=123456
-    )
+    class DummyRedis:
+        def __init__(self):
+            self.store = {}
+
+        def get(self, name):
+            return self.store.get(name)
+
+        def set(self, name, value, ex=None, nx=None):
+            self.store[name] = value
+
+        def delete(self, name):
+            self.store.pop(name, None)
+
+    redis_client = DummyRedis()
+    monkeypatch.setattr("app.features.auth.service.redis_client", redis_client)
+
+    def fake_generate_code(email: str) -> str:
+        redis_client.set(verify_code_key(email), "123456")
+        redis_client.set(send_limit_key(email), "1", ex=60, nx=True)
+        return "123456"
+
+    monkeypatch.setattr("app.features.auth.service.generate_code", fake_generate_code)
+
+    request = SendEmailRequest(email="test@example.com", username="alice", code=123456)
     result = await send_verify_code(request)
 
     assert result == {"ok": True}
-    assert captured["to_address"] == "test@example.com"
+    assert captured["email"] == "test@example.com"
     assert captured["username"] == "alice"
-    assert isinstance(captured["code"], int)
+    assert captured["code"] == "123456"
+    assert redis_client.get(verify_code_key("test@example.com")) == "123456"
+    assert redis_client.get(send_limit_key("test@example.com")) == "1"

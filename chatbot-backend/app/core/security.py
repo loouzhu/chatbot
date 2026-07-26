@@ -2,6 +2,6 @@ from passlib.context import CryptContext
 
 
 # 密码加密
-def hash_password(password: str) -> str:
+def hash_code(code: str) -> str:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    return pwd_context.hash(password)
+    return pwd_context.hash(code)

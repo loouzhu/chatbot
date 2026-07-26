@@ -20,16 +20,16 @@ class EmailClient:
         self.client = DmClient(config)
         self.template_path = Path(__file__).with_name("templates") / ""
 
-    async def send_mail(self, to_address: str, username: str, code: int):
+    async def send_mail(self, email: str, username: str, code: str):
         template_path = self.template_path / "register.html"
         html = template_path.read_text(encoding="utf-8")
         html = html.replace("{{username}}", username)
-        html = html.replace("{{code}}", str(code))
+        html = html.replace("{{code}}", code)
         request = dm_models.SingleSendMailRequest(
             account_name=settings.ALIYUN_DM_ACCOUNT,
             address_type=1,
             reply_to_address=False,
-            to_address=to_address,
+            to_address=email,
             subject="验证码",
             html_body=html,
             text_body="",

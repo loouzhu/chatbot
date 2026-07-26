@@ -34,7 +34,6 @@ class RegisterRequest(BaseModel):
 
 
 class RegisterResponse(BaseModel):
-    id: int
     email: str
     username: str
     message: str
@@ -49,8 +48,14 @@ class LoginResponse(BaseModel):
     pass
 
 
-class SendEmailRequest(BaseModel):
-    to_address: EmailStr
+class SendVerifyCodeRequest(BaseModel):
+    email: EmailStr
     username: str
     code: int
-    
+
+
+class SendVerifyCodeResponse(BaseModel):
+    email: EmailStr
+    username: str
+    code: int
+    message: str
