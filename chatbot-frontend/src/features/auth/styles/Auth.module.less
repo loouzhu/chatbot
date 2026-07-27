@@ -170,6 +170,44 @@
   line-height: 1.65;
 }
 
+.loginMethodTabs {
+  display: grid;
+  margin-bottom: 22px;
+  padding: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f4f7fa;
+}
+
+.loginMethodTabs button {
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  color: #718096;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.loginMethodTabs button:hover {
+  color: #2d5eaa;
+}
+
+.loginMethodTabs button.active {
+  color: #245fb9;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(38, 75, 126, 0.12);
+}
+
 .authForm {
   display: flex;
   flex-direction: column;
@@ -550,7 +588,8 @@
   }
 
   .primaryButton,
-  .inputShell {
+  .inputShell,
+  .loginMethodTabs button {
     transition: none;
   }
 }

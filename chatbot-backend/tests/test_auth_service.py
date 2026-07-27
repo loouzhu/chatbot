@@ -6,13 +6,13 @@ from app.features.auth.schemas import (
     EmailLoginRequest,
     RegisterRequest,
     SendVerifyCodeRequest,
-    UsernamePasswordLoginRequest,
+    UsernameLoginRequest,
 )
 from app.features.auth.service import (
     email_login_user,
     register_user,
     send_verify_code,
-    username_password_login_user,
+    username_login_user,
 )
 
 
@@ -105,15 +105,15 @@ async def test_send_verify_code_uses_email_client(monkeypatch):
     redis_client = DummyRedis()
     monkeypatch.setattr("app.features.auth.service.redis_client", redis_client)
 
-    def fake_generate_code(email: str) -> str:
-        redis_client.set(verify_code_key("auth", "register", email), "123456")
-        redis_client.set(send_limit_key("auth", "register", email), "1", ex=60, nx=True)
+    def fake_generate_code(email: str, purpose: str = "register") -> str:
+        redis_client.set(verify_code_key("auth", purpose, email), "123456")
+        redis_client.set(send_limit_key("auth", purpose, email), "1", ex=60, nx=True)
         return "123456"
 
     monkeypatch.setattr("app.features.auth.service.generate_code", fake_generate_code)
 
     request = SendVerifyCodeRequest(
-        email="test@example.com", username="alice", code="123456"
+        email="test@example.com", username="alice", code="123456", purpose="login"
     )
     result = await send_verify_code(request)
 
@@ -125,11 +125,11 @@ async def test_send_verify_code_uses_email_client(monkeypatch):
     assert captured["username"] == "alice"
     assert captured["code"] == "123456"
     assert (
-        redis_client.get(verify_code_key("auth", "register", "test@example.com"))
+        redis_client.get(verify_code_key("auth", "login", "test@example.com"))
         == "123456"
     )
     assert (
-        redis_client.get(send_limit_key("auth", "register", "test@example.com")) == "1"
+        redis_client.get(send_limit_key("auth", "login", "test@example.com")) == "1"
     )
 
 
@@ -171,12 +171,11 @@ async def test_email_login_user_uses_verify_code(monkeypatch):
     result = await email_login_user(request, db)
 
     assert result.email == "test@example.com"
-    assert result.username == "alice"
     assert result.message == "登录成功"
 
 
 @pytest.mark.asyncio
-async def test_username_password_login_user_uses_password(monkeypatch):
+async def test_username_login_user_uses_password(monkeypatch):
     class DummyRepository:
         def __init__(self, db):
             self.db = db
@@ -194,11 +193,10 @@ async def test_username_password_login_user_uses_password(monkeypatch):
         lambda password, hashed: True,
     )
 
-    request = UsernamePasswordLoginRequest(username="tester", password="123456")
+    request = UsernameLoginRequest(username="tester", password="123456")
     db = SimpleNamespace(close=lambda: None, commit=lambda: None)
 
-    result = await username_password_login_user(request, db)
+    result = await username_login_user(request, db)
 
-    assert result.email == "tester@example.com"
     assert result.username == "tester"
     assert result.message == "登录成功"

@@ -28,11 +28,17 @@ export function useVerificationCode() {
     }
   }
 
+  function reset() {
+    setChallenge(null);
+    setCountdown(0);
+  }
+
   return {
     challenge,
     countdown,
     sending,
     canSend: countdown === 0 && !sending,
     send,
+    reset,
   };
 }

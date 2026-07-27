@@ -1,14 +1,19 @@
-export interface LoginInput {
-  account: string;
+export interface PasswordLoginInput {
+  username: string;
   password: string;
+}
+
+export interface EmailCodeLoginInput {
+  email: string;
+  verifyCode: string;
 }
 
 export interface RegisterInput {
   email: string;
   username: string;
   password: string;
-  emailCode: string;
-  verificationId: string;
+  confirmPassword: string;
+  verifyCode: string;
 }
 
 export interface AuthUser {

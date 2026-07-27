@@ -15,7 +15,12 @@ import {
 } from "../utils/validation";
 import styles from "../styles/Auth.module.less";
 
-type RegisterField = "email" | "username" | "password" | "confirmPassword" | "emailCode";
+type RegisterField =
+  | "email"
+  | "username"
+  | "password"
+  | "confirmPassword"
+  | "emailCode";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -46,7 +51,9 @@ export function RegisterPage() {
           : "验证码已发送，请前往邮箱查看",
       );
     } catch (error) {
-      setRequestError(error instanceof Error ? error.message : "验证码发送失败");
+      setRequestError(
+        error instanceof Error ? error.message : "验证码发送失败",
+      );
     }
   }
 
@@ -58,7 +65,8 @@ export function RegisterPage() {
       emailCode: validateEmailCode(emailCode),
     };
     if (!confirmPassword) nextErrors.confirmPassword = "请再次输入密码";
-    else if (password !== confirmPassword) nextErrors.confirmPassword = "两次输入的密码不一致";
+    else if (password !== confirmPassword)
+      nextErrors.confirmPassword = "两次输入的密码不一致";
     if (!verification.challenge) nextErrors.emailCode = "请先获取邮箱验证码";
     return nextErrors;
   }
@@ -76,15 +84,17 @@ export function RegisterPage() {
         email: email.trim(),
         username: username.trim(),
         password,
-        emailCode,
-        verificationId: verification.challenge!.verificationId,
+        confirmPassword,
+        verifyCode: emailCode,
       });
       navigate("/auth/login", {
         replace: true,
         state: { message: "注册成功，请使用新账号登录" },
       });
     } catch (error) {
-      setRequestError(error instanceof Error ? error.message : "注册失败，请稍后重试");
+      setRequestError(
+        error instanceof Error ? error.message : "注册失败，请稍后重试",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -105,7 +115,9 @@ export function RegisterPage() {
       }
     >
       <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
-        {requestError && <StatusMessage type="error">{requestError}</StatusMessage>}
+        {requestError && (
+          <StatusMessage type="error">{requestError}</StatusMessage>
+        )}
         {notice && <StatusMessage type="info">{notice}</StatusMessage>}
 
         <FormField
@@ -187,7 +199,11 @@ export function RegisterPage() {
           }
         />
 
-        <button className={styles.primaryButton} type="submit" disabled={submitting}>
+        <button
+          className={styles.primaryButton}
+          type="submit"
+          disabled={submitting}
+        >
           {submitting ? <span className={styles.spinner} /> : "创建账号"}
         </button>
         <p className={styles.terms}>注册即表示你同意服务条款与隐私政策</p>

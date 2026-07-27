@@ -1,3 +1,5 @@
+from typing import Literal
+
 from app.core.exceptions import ValidationException
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
@@ -63,6 +65,7 @@ class SendVerifyCodeRequest(BaseModel):
     email: EmailStr
     username: str
     code: str
+    purpose: Literal["register", "login"] = "register"
 
 
 class SendVerifyCodeResponse(BaseModel):

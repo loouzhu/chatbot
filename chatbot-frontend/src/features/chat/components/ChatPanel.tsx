@@ -1,10 +1,22 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Bot,
+  LogOut,
+  Menu,
+  MessageSquare,
+  PanelLeftClose,
+  Plus,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { useChat } from "../hooks/useChat";
 import styles from "../../../app/App.module.less";
 import { ChatWindow } from "./ChatWindow";
 import { ChatInput } from "./ChatInput";
-import { Link } from "react-router-dom";
 
 export function ChatPanel() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const {
     userInput,
     chatLog,
@@ -13,88 +25,113 @@ export function ChatPanel() {
     inputRef,
     handleInputChange,
     handleSubmit,
+    handlePromptSelect,
+    clearChat,
   } = useChat();
+
+  const firstUserMessage = chatLog.find((message) => message.type === "user");
+  const conversationTitle = firstUserMessage?.text || "新的对话";
+
+  const startNewChat = () => {
+    clearChat();
+    setSidebarOpen(false);
+  };
 
   return (
     <main className={styles.chatPage}>
-      <section className={styles.chatShell} aria-label="BlueChat 智能对话">
-        <aside className={styles.sidebar}>
+      {sidebarOpen && (
+        <button
+          className={styles.sidebarBackdrop}
+          type="button"
+          aria-label="关闭侧边栏"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ""}`}
+        aria-label="对话侧边栏"
+      >
+        <div className={styles.sidebarHeader}>
           <div className={styles.sidebarBrand}>
-            <span className={styles.brandMark} aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M7 18.2 3.8 20l.8-3.8A8.3 8.3 0 0 1 3 11.3C3 6.7 7 3 12 3s9 3.7 9 8.3-4 8.3-9 8.3c-1.8 0-3.5-.5-5-1.4Z" />
-                <path d="M8 11.4h.01M12 11.4h.01M16 11.4h.01" />
-              </svg>
+            <span className={styles.logoMark} aria-hidden="true">
+              <Sparkles size={19} />
             </span>
-            <div>
-              <h2>BlueChat</h2>
-              <p>AI 会话工作台</p>
-            </div>
+            <span>BlueChat</span>
           </div>
-
-          <button className={styles.sidebarAction} type="button">
-            + 新对话
-          </button>
-
-          <div className={styles.sidebarList}>
-            <div className={`${styles.sidebarItem} ${styles.active}`}>
-              <span>今日总结</span>
-              <small>刚刚</small>
-            </div>
-            <div className={styles.sidebarItem}>
-              <span>产品需求拆解</span>
-              <small>1 小时前</small>
-            </div>
-            <div className={styles.sidebarItem}>
-              <span>邮件文案优化</span>
-              <small>昨天</small>
-            </div>
-          </div>
-
-          <Link
-            className={styles.sidebarExit}
-            to="/auth/login"
-            aria-label="退出聊天"
+          <button
+            className={styles.iconButton}
+            type="button"
+            aria-label="收起侧边栏"
+            title="收起侧边栏"
+            onClick={() => setSidebarOpen(false)}
           >
-            退出登录
-          </Link>
-        </aside>
-
-        <div className={styles.mainPanel}>
-          <header className={styles.chatHeader}>
-            <div className={styles.brandGroup}>
-              <div>
-                <h1>当前对话</h1>
-                <p>
-                  <span className={styles.onlineDot} /> AI 助手在线
-                </p>
-              </div>
-            </div>
-            <Link
-              className={styles.exitLink}
-              to="/auth/login"
-              aria-label="退出聊天"
-            >
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M10 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h5M14 8l4 4-4 4M9 12h9" />
-              </svg>
-              <span>退出</span>
-            </Link>
-          </header>
-
-          <ChatWindow
-            chatLog={chatLog}
-            loading={loading}
-            chatWindowRef={chatWindowRef}
-          />
-          <ChatInput
-            userInput={userInput}
-            loading={loading}
-            inputRef={inputRef}
-            onInputChange={handleInputChange}
-            onSubmit={handleSubmit}
-          />
+            <PanelLeftClose size={19} />
+          </button>
         </div>
+
+        <button className={styles.newChatButton} type="button" onClick={startNewChat}>
+          <Plus size={18} />
+          <span>新建对话</span>
+        </button>
+
+        <div className={styles.historySection}>
+          <p className={styles.historyLabel}>最近</p>
+          <button className={styles.historyItem} type="button" aria-current="page">
+            <MessageSquare size={17} />
+            <span>{conversationTitle}</span>
+          </button>
+        </div>
+
+        <div className={styles.sidebarFooter}>
+          <Link className={styles.sidebarFooterItem} to="/auth/login">
+            <LogOut size={18} />
+            <span>退出登录</span>
+          </Link>
+        </div>
+      </aside>
+
+      <section className={styles.mainPanel} aria-label="BlueChat 智能对话">
+        <header className={styles.chatHeader}>
+          <button
+            className={`${styles.iconButton} ${styles.menuButton}`}
+            type="button"
+            aria-label={sidebarOpen ? "关闭侧边栏" : "打开侧边栏"}
+            title={sidebarOpen ? "关闭侧边栏" : "打开侧边栏"}
+            onClick={() => setSidebarOpen((open) => !open)}
+          >
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          <div className={styles.headerTitle}>
+            <Bot size={19} aria-hidden="true" />
+            <span>BlueChat</span>
+            <small>AI 助手</small>
+          </div>
+          <button
+            className={styles.headerNewChat}
+            type="button"
+            onClick={startNewChat}
+            aria-label="新建对话"
+            title="新建对话"
+          >
+            <Plus size={19} />
+            <span>新对话</span>
+          </button>
+        </header>
+
+        <ChatWindow
+          chatLog={chatLog}
+          loading={loading}
+          chatWindowRef={chatWindowRef}
+          onPromptSelect={handlePromptSelect}
+        />
+        <ChatInput
+          userInput={userInput}
+          loading={loading}
+          inputRef={inputRef}
+          onInputChange={handleInputChange}
+          onSubmit={handleSubmit}
+        />
       </section>
     </main>
   );

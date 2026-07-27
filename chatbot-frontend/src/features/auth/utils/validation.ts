@@ -14,7 +14,7 @@ export function validateUsername(value: string): string | undefined {
   const username = value.trim();
   if (!username) return "请输入用户名";
   if (Array.from(username).length < 3 || Array.from(username).length > 8) {
-    return "用户名长度需为 3–8 个字符";
+    return "用户名长度需为 3-8 个字符";
   }
   if (!USERNAME_PATTERN.test(username)) {
     return "用户名仅支持中文、英文和数字";
@@ -25,10 +25,10 @@ export function validateUsername(value: string): string | undefined {
 export function validatePassword(value: string): string | undefined {
   if (!value) return "请输入密码";
   if (value.length < 8 || value.length > 16) {
-    return "密码长度需为 8–16 个字符";
+    return "密码长度需为 8-16 个字符";
   }
 
-  const categoryCount = [/[\p{L}]/u, /\d/, /[^\p{L}\d]/u].filter((pattern) =>
+  const categoryCount = [/\p{L}/u, /\d/, /[^\p{L}\d]/u].filter((pattern) =>
     pattern.test(value),
   ).length;
 

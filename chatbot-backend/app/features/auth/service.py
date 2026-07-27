@@ -29,10 +29,10 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return pwd_context.verify(password, hashed_password)
 
 
-def generate_code(email: str) -> str:
+def generate_code(email: str, purpose: str = "register") -> str:
     verify_code = str(random.randint(100000, 999999))
-    code_key = verify_code_key("auth", "register", email)
-    limit_key = send_limit_key("auth", "register", email)
+    code_key = verify_code_key("auth", purpose, email)
+    limit_key = send_limit_key("auth", purpose, email)
 
     if redis_client.get(limit_key):
         raise AuthException("请稍后再试", 400, 1001)
@@ -44,7 +44,7 @@ def generate_code(email: str) -> str:
 
 async def send_verify_code(request: SendVerifyCodeRequest):
     try:
-        verify_code = generate_code(email=str(request.email))
+        verify_code = generate_code(email=str(request.email), purpose=request.purpose)
         email_client = EmailClient()
         await email_client.send_mail(
             email=str(request.email),
@@ -58,7 +58,9 @@ async def send_verify_code(request: SendVerifyCodeRequest):
             message="发送验证码成功",
         )
     except Exception:
-        redis_client.delete(verify_code_key("auth", "register", str(request.email)))
+        redis_client.delete(
+            verify_code_key("auth", request.purpose, str(request.email))
+        )
         raise AuthException("发送验证码失败", 500, 1002)
 
 

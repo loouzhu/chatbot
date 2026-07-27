@@ -43,3 +43,11 @@ export function saveChatLog(chatLog: ChatMessage[]): void {
     console.error("Failed to save chat log to localStorage:", error);
   }
 }
+
+export function clearChatLog(): void {
+  try {
+    window.localStorage.removeItem(CHAT_STORAGE_KEY);
+  } catch (error) {
+    console.error("Failed to clear chat log from localStorage:", error);
+  }
+}
