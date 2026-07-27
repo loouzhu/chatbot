@@ -218,9 +218,9 @@ export function LoginPage() {
 
   return (
     <AuthLayout
-      eyebrow="欢迎回来"
-      title="登录 BlueChat"
-      description="选择适合你的方式，继续智能对话。"
+      eyebrow=""
+      title="登录"
+      description=""
       compact
       footer={
         <p>
