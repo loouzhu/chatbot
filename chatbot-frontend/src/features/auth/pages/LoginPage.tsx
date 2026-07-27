@@ -199,6 +199,11 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
         }
       />
 
+      <div
+        className={`${styles.formMeta} ${styles.formMetaPlaceholder}`}
+        aria-hidden="true"
+      />
+
       <button className={styles.primaryButton} type="submit" disabled={submitting}>
         {submitting ? <span className={styles.spinner} /> : "登录"}
       </button>
