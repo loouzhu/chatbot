@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ShieldIcon } from "./Icons";
 import styles from "../styles/Auth.module.less";
 
 interface AuthLayoutProps {
@@ -24,10 +23,7 @@ export function AuthLayout({
     <main className={styles.authPage}>
       <div className={styles.ambientGlow} aria-hidden="true" />
       <Link className={styles.brand} to="/auth/login" aria-label="返回登录页">
-        <span className={styles.brandMark}>
-          <ShieldIcon />
-        </span>
-        <span>BlueChat</span>
+
       </Link>
 
       <section

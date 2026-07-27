@@ -14,8 +14,14 @@
   color: #17233d;
   background: #f5f9ff;
   font-family:
-    Inter, "PingFang SC", "Microsoft YaHei", system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", sans-serif;
+    Inter,
+    "PingFang SC",
+    "Microsoft YaHei",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -33,15 +39,24 @@
   position: relative;
   isolation: isolate;
   display: flex;
+  height: 100vh;
   min-height: 100vh;
-  padding: 96px 24px 68px;
+  padding: 10px 20px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   background:
-    radial-gradient(circle at 8% 10%, rgba(55, 132, 255, 0.12), transparent 28%),
-    radial-gradient(circle at 90% 90%, rgba(46, 111, 232, 0.09), transparent 30%),
+    radial-gradient(
+      circle at 8% 10%,
+      rgba(55, 132, 255, 0.12),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 90% 90%,
+      rgba(46, 111, 232, 0.09),
+      transparent 30%
+    ),
     linear-gradient(145deg, #f8fbff 0%, #f2f7ff 50%, #edf5ff 100%);
 }
 
@@ -84,8 +99,8 @@
 
 .brand {
   position: absolute;
-  top: 30px;
-  left: 38px;
+  top: 22px;
+  left: 30px;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -114,9 +129,9 @@
 
 .authCard {
   width: min(100%, 500px);
-  padding: 34px 42px 28px;
+  padding: 24px 34px 20px;
   border: 1px solid rgba(171, 200, 240, 0.56);
-  border-radius: 24px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.94);
   box-shadow:
     0 24px 65px rgba(50, 91, 151, 0.12),
@@ -141,13 +156,13 @@
 }
 
 .cardHeader {
-  margin-bottom: 28px;
+  margin-bottom: 18px;
   text-align: center;
 }
 
 .eyebrow {
   display: inline-block;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
   color: #2f73de;
   font-size: 12px;
   font-weight: 700;
@@ -157,22 +172,22 @@
 .cardHeader h1 {
   margin: 0;
   color: #13213c;
-  font-size: clamp(27px, 4vw, 32px);
+  font-size: 28px;
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.8px;
 }
 
 .cardHeader p {
-  margin: 10px 0 0;
+  margin: 6px 0 0;
   color: #71809a;
   font-size: 14px;
-  line-height: 1.65;
+  line-height: 1.5;
 }
 
 .loginMethodTabs {
   display: grid;
-  margin-bottom: 22px;
+  margin-bottom: 14px;
   padding: 4px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
@@ -183,7 +198,7 @@
 
 .loginMethodTabs button {
   min-width: 0;
-  height: 38px;
+  height: 36px;
   padding: 0 10px;
   border: 0;
   border-radius: 7px;
@@ -211,13 +226,13 @@
 .authForm {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .fieldGroup {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 5px;
 }
 
 .fieldGroup > label {
@@ -228,10 +243,10 @@
 
 .inputShell {
   display: flex;
-  min-height: 48px;
+  min-height: 44px;
   align-items: center;
   border: 1px solid #dbe5f2;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #fbfdff;
   transition:
     border-color 180ms ease,
@@ -256,8 +271,8 @@
 
 .inputIcon {
   display: grid;
-  width: 46px;
-  flex: 0 0 46px;
+  width: 42px;
+  flex: 0 0 42px;
   place-items: center;
   color: #8da0bc;
 }
@@ -274,7 +289,7 @@
 .inputShell input {
   width: 100%;
   min-width: 0;
-  height: 46px;
+  height: 42px;
   padding: 0 12px 0 0;
   border: 0;
   outline: none;
@@ -289,10 +304,10 @@
 
 .iconButton {
   display: grid;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   padding: 0;
-  flex: 0 0 44px;
+  flex: 0 0 40px;
   place-items: center;
   border: 0;
   color: #8b9bb3;
@@ -354,13 +369,13 @@
 .primaryButton {
   display: inline-flex;
   width: 100%;
-  min-height: 48px;
+  min-height: 44px;
   margin-top: 2px;
   padding: 0 20px;
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 12px;
+  border-radius: 10px;
   color: #fff;
   background: linear-gradient(135deg, #3d86f2 0%, #286edb 100%);
   box-shadow: 0 9px 22px rgba(42, 111, 219, 0.22);
@@ -414,8 +429,8 @@
 
 .statusMessage {
   display: flex;
-  min-height: 42px;
-  padding: 10px 12px;
+  min-height: 38px;
+  padding: 8px 11px;
   align-items: flex-start;
   gap: 8px;
   border: 1px solid transparent;
@@ -450,8 +465,8 @@
 }
 
 .cardFooter {
-  margin-top: 26px;
-  padding-top: 20px;
+  margin-top: 18px;
+  padding-top: 14px;
   border-top: 1px solid #edf1f7;
   color: #78869b;
   font-size: 13px;
@@ -474,7 +489,7 @@
 }
 
 .terms {
-  margin: -4px 0 0;
+  margin: -2px 0 0;
   color: #9aa7ba;
   font-size: 11px;
   text-align: center;
@@ -482,7 +497,7 @@
 
 .pageFooter {
   position: absolute;
-  bottom: 22px;
+  bottom: 12px;
   margin: 0;
   color: #9aaac0;
   font-size: 12px;
@@ -537,34 +552,34 @@
 
 @media (max-width: 600px) {
   .authPage {
+    height: 100svh;
     min-height: 100svh;
-    padding: 82px 14px 56px;
-    justify-content: flex-start;
+    padding: 8px 10px;
+    justify-content: center;
   }
 
   .brand {
-    top: 22px;
-    left: 20px;
+    top: 14px;
+    left: 16px;
   }
 
   .authCard,
   .authCardCompact {
     width: 100%;
-    padding: 28px 22px 24px;
-    border-radius: 19px;
+    padding: 18px 16px 16px;
+    border-radius: 12px;
   }
 
   .cardHeader {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
 
   .authForm {
-    gap: 16px;
+    gap: 12px;
   }
 
   .pageFooter {
-    position: static;
-    margin-top: 24px;
+    display: none;
   }
 }
 
@@ -578,6 +593,103 @@
   .codeButton {
     min-width: 82px;
     padding: 0 8px;
+  }
+}
+
+@media (max-height: 760px) {
+  .authPage {
+    padding: 8px 12px;
+  }
+
+  .brand {
+    top: 10px;
+    left: 16px;
+    font-size: 15px;
+  }
+
+  .brandMark {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .authCard,
+  .authCardCompact {
+    padding: 14px 28px 12px;
+  }
+
+  .cardHeader {
+    margin-bottom: 12px;
+  }
+
+  .eyebrow {
+    margin-bottom: 2px;
+    font-size: 11px;
+  }
+
+  .cardHeader h1 {
+    font-size: 24px;
+  }
+
+  .cardHeader p {
+    margin-top: 3px;
+    font-size: 12px;
+  }
+
+  .loginMethodTabs {
+    margin-bottom: 10px;
+  }
+
+  .authForm {
+    gap: 12px;
+  }
+
+  .fieldGroup {
+    gap: 6px;
+  }
+
+  .fieldGroup > label {
+    font-size: 12px;
+  }
+
+  .inputShell {
+    min-height: 40px;
+  }
+
+  .inputShell input {
+    height: 38px;
+  }
+
+  .inputIcon {
+    width: 38px;
+    flex-basis: 38px;
+  }
+
+  .primaryButton {
+    min-height: 42px;
+  }
+
+  .cardFooter {
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+
+  .terms {
+    font-size: 10px;
+  }
+
+  .pageFooter {
+    display: none;
+  }
+}
+
+@media (max-height: 640px) {
+  .brand {
+    display: none;
+  }
+
+  .authForm {
+    gap: 10px;
   }
 }
 

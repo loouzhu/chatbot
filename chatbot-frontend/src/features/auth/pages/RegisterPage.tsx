@@ -105,9 +105,9 @@ export function RegisterPage() {
 
   return (
     <AuthLayout
-      eyebrow="创建账号"
-      title="加入 BlueChat"
-      description="几步即可完成注册，开启你的智能对话。"
+      eyebrow=""
+      title="创建账号"
+      description=""
       footer={
         <p>
           已有账号？ <Link to="/auth/login">返回登录</Link>
@@ -149,7 +149,7 @@ export function RegisterPage() {
           label="设置密码"
           type="password"
           icon={<LockIcon />}
-          placeholder="8–16 位，至少包含两类字符"
+          placeholder="8–64位字符"
           autoComplete="new-password"
           value={password}
           error={errors.password}
