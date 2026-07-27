@@ -110,6 +110,7 @@
   margin-top: 10px;
   padding: 0 12px;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
   border: 1px solid #d9d9d6;
   border-radius: 8px;
@@ -168,8 +169,8 @@
   flex: 0 0 auto;
 }
 
-.historyItem span,
-.sidebarFooterItem span {
+.historyItem > span:last-child,
+.sidebarFooterItem > span:last-child {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -177,13 +178,46 @@
 }
 
 .sidebarFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding-top: 10px;
   border-top: 1px solid #e2e2df;
+}
+
+.sidebarProfile {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  color: #41423f;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sidebarProfile > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebarAvatar {
+  flex: 0 0 auto;
+  color: #ffffff;
+  background: #0b7a68;
 }
 
 .sidebarFooterItem {
   height: 40px;
   padding: 0 10px;
+}
+
+.sidebarLogout {
+  width: auto;
+  flex: 0 0 auto;
+  justify-content: flex-end;
 }
 
 .sidebarFooterItem:hover {
@@ -672,7 +706,7 @@
     justify-content: center;
   }
 
-  .headerNewChat span {
+  .headerNewChat > span:last-child {
     display: none;
   }
 

@@ -186,41 +186,20 @@
 }
 
 .loginMethodTabs {
-  display: grid;
+  width: 100%;
   margin-bottom: 14px;
   padding: 4px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   background: #f4f7fa;
 }
 
-.loginMethodTabs button {
-  min-width: 0;
-  height: 36px;
+.loginMethodTabs :global(.ant-segmented-item-label) {
+  min-height: 36px;
   padding: 0 10px;
-  border: 0;
-  border-radius: 7px;
-  color: #718096;
-  background: transparent;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-  transition:
-    color 160ms ease,
-    background-color 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.loginMethodTabs button:hover {
-  color: #2d5eaa;
-}
-
-.loginMethodTabs button.active {
-  color: #245fb9;
-  background: #ffffff;
-  box-shadow: 0 1px 4px rgba(38, 75, 126, 0.12);
+  line-height: 36px;
 }
 
 .authForm {
@@ -241,87 +220,20 @@
   font-weight: 600;
 }
 
-.inputShell {
-  display: flex;
+.formControl {
   min-height: 44px;
-  align-items: center;
-  border: 1px solid #dbe5f2;
   border-radius: 10px;
   background: #fbfdff;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    background-color 180ms ease;
-}
-
-.inputShell:focus-within {
-  border-color: #3a7fe8;
-  background: #fff;
-  box-shadow: 0 0 0 4px rgba(58, 127, 232, 0.11);
-}
-
-.inputShell.inputError {
-  border-color: #e45765;
-  background: #fffafb;
-}
-
-.inputShell.inputError:focus-within {
-  box-shadow: 0 0 0 4px rgba(228, 87, 101, 0.1);
-}
-
-.inputIcon {
-  display: grid;
-  width: 42px;
-  flex: 0 0 42px;
-  place-items: center;
-  color: #8da0bc;
-}
-
-.inputIcon svg {
-  width: 19px;
-  height: 19px;
-}
-
-.inputShell:focus-within .inputIcon {
-  color: #3477df;
-}
-
-.inputShell input {
-  width: 100%;
-  min-width: 0;
-  height: 42px;
-  padding: 0 12px 0 0;
-  border: 0;
-  outline: none;
-  color: #1c2b45;
-  background: transparent;
   font-size: 14px;
 }
 
-.inputShell input::placeholder {
-  color: #a8b5c8;
-}
-
-.iconButton {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  flex: 0 0 40px;
-  place-items: center;
-  border: 0;
+.formControl :global(.ant-input-prefix) {
+  margin-inline-end: 10px;
   color: #8b9bb3;
-  background: transparent;
-  cursor: pointer;
 }
 
-.iconButton:hover {
+.formControl:global(.ant-input-affix-wrapper-focused) :global(.ant-input-prefix) {
   color: #3477df;
-}
-
-.iconButton svg {
-  width: 18px;
-  height: 18px;
 }
 
 .fieldError,
@@ -451,24 +363,6 @@
   flex: 0 0 16px;
 }
 
-.statusMessage.success {
-  border-color: #bfe8d2;
-  color: #25724b;
-  background: #effbf4;
-}
-
-.statusMessage.error {
-  border-color: #f2cbd0;
-  color: #be3f4d;
-  background: #fff5f6;
-}
-
-.statusMessage.info {
-  border-color: #cadefb;
-  color: #3267ae;
-  background: #f1f7ff;
-}
-
 .cardFooter {
   margin-top: 18px;
   padding-top: 14px;
@@ -507,21 +401,6 @@
   color: #9aaac0;
   font-size: 12px;
   letter-spacing: 0.3px;
-}
-
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 700ms linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .successPanel {
@@ -657,17 +536,8 @@
     font-size: 12px;
   }
 
-  .inputShell {
+  .formControl {
     min-height: 40px;
-  }
-
-  .inputShell input {
-    height: 38px;
-  }
-
-  .inputIcon {
-    width: 38px;
-    flex-basis: 38px;
   }
 
   .primaryButton {
@@ -699,14 +569,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .authCard,
-  .spinner {
+  .authCard {
     animation: none;
   }
 
   .primaryButton,
-  .inputShell,
-  .loginMethodTabs button {
+  .formControl {
     transition: none;
   }
 }

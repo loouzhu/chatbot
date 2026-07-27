@@ -1,4 +1,4 @@
-import { CheckIcon } from "./Icons";
+import { Alert } from "antd";
 import styles from "../styles/Auth.module.less";
 
 interface StatusMessageProps {
@@ -7,10 +7,5 @@ interface StatusMessageProps {
 }
 
 export function StatusMessage({ type, children }: StatusMessageProps) {
-  return (
-    <div className={`${styles.statusMessage} ${styles[type]}`} role="status">
-      {type === "success" && <CheckIcon />}
-      <span>{children}</span>
-    </div>
-  );
+  return <Alert className={styles.statusMessage} type={type} message={children} showIcon />;
 }

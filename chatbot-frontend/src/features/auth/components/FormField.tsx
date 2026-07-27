@@ -1,9 +1,8 @@
-import { useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
-import { EyeIcon } from "./Icons";
+import { useId, type ReactNode } from "react";
+import { Input, type InputProps } from "antd";
 import styles from "../styles/Auth.module.less";
 
-interface FormFieldProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "className"> {
+interface FormFieldProps extends Omit<InputProps, "prefix" | "suffix"> {
   label: string;
   icon: ReactNode;
   error?: string;
@@ -23,34 +22,25 @@ export function FormField({
 }: FormFieldProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const isPassword = type === "password";
   const describedBy = error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined;
+  const sharedProps: InputProps = {
+    ...inputProps,
+    id: inputId,
+    prefix: icon,
+    status: error ? "error" : undefined,
+    className: styles.formControl,
+    "aria-invalid": Boolean(error),
+    "aria-describedby": describedBy,
+  };
 
   return (
     <div className={styles.fieldGroup}>
       <label htmlFor={inputId}>{label}</label>
-      <div className={`${styles.inputShell} ${error ? styles.inputError : ""}`}>
-        <span className={styles.inputIcon}>{icon}</span>
-        <input
-          {...inputProps}
-          id={inputId}
-          type={isPassword && passwordVisible ? "text" : type}
-          aria-invalid={Boolean(error)}
-          aria-describedby={describedBy}
-        />
-        {isPassword && (
-          <button
-            className={styles.iconButton}
-            type="button"
-            onClick={() => setPasswordVisible((value) => !value)}
-            aria-label={passwordVisible ? "隐藏密码" : "显示密码"}
-          >
-            <EyeIcon open={passwordVisible} />
-          </button>
-        )}
-        {trailing}
-      </div>
+      {type === "password" ? (
+        <Input.Password {...sharedProps} />
+      ) : (
+        <Input {...sharedProps} type={type} suffix={trailing} />
+      )}
       {error ? (
         <span className={styles.fieldError} id={`${inputId}-error`}>
           {error}

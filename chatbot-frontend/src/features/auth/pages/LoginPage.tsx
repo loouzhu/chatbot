@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { KeyRound, Lock, Mail, UserRound } from "lucide-react";
+import { KeyOutlined, LockOutlined, MailOutlined, UserOutlined } from "@ant-design/icons";
+import { Button, Segmented } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { authApi, authRuntime } from "../api/authApi";
 import { AuthLayout } from "../components/AuthLayout";
@@ -58,7 +59,7 @@ function PasswordLoginForm({ successMessage }: LoginFormProps) {
 
       <FormField
         label="账号"
-        icon={<UserRound />}
+        icon={<UserOutlined />}
         placeholder="请输入用户名"
         autoComplete="username"
         value={username}
@@ -71,7 +72,7 @@ function PasswordLoginForm({ successMessage }: LoginFormProps) {
       <FormField
         label="密码"
         type="password"
-        icon={<Lock />}
+        icon={<LockOutlined />}
         placeholder="请输入密码"
         autoComplete="current-password"
         value={password}
@@ -86,9 +87,15 @@ function PasswordLoginForm({ successMessage }: LoginFormProps) {
         <Link to="/auth/forgot-password">忘记密码？</Link>
       </div>
 
-      <button className={styles.primaryButton} type="submit" disabled={submitting}>
-        {submitting ? <span className={styles.spinner} /> : "登录"}
-      </button>
+      <Button
+        className={styles.primaryButton}
+        type="primary"
+        htmlType="submit"
+        loading={submitting}
+        block
+      >
+        登录
+      </Button>
     </form>
   );
 }
@@ -156,7 +163,7 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
       <FormField
         label="邮箱"
         type="email"
-        icon={<Mail />}
+        icon={<MailOutlined />}
         placeholder="name@example.com"
         autoComplete="email"
         value={email}
@@ -174,7 +181,7 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
         label="邮箱验证码"
         inputMode="numeric"
         maxLength={6}
-        icon={<KeyRound />}
+        icon={<KeyOutlined />}
         placeholder="请输入 6 位验证码"
         autoComplete="one-time-code"
         value={verifyCode}
@@ -184,18 +191,18 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
           setErrors((current) => ({ ...current, verifyCode: undefined }));
         }}
         trailing={
-          <button
+          <Button
             className={styles.codeButton}
-            type="button"
             onClick={() => void handleSendCode()}
             disabled={!verification.canSend}
+            size="small"
           >
             {verification.sending
               ? "发送中"
               : verification.countdown > 0
                 ? `${verification.countdown}s`
                 : "获取验证码"}
-          </button>
+          </Button>
         }
       />
 
@@ -204,9 +211,15 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
         aria-hidden="true"
       />
 
-      <button className={styles.primaryButton} type="submit" disabled={submitting}>
-        {submitting ? <span className={styles.spinner} /> : "登录"}
-      </button>
+      <Button
+        className={styles.primaryButton}
+        type="primary"
+        htmlType="submit"
+        loading={submitting}
+        block
+      >
+        登录
+      </Button>
     </form>
   );
 }
@@ -228,26 +241,17 @@ export function LoginPage() {
         </p>
       }
     >
-      <div className={styles.loginMethodTabs} role="tablist" aria-label="登录方式">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "password"}
-          className={mode === "password" ? styles.active : ""}
-          onClick={() => setMode("password")}
-        >
-          账号密码
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "emailCode"}
-          className={mode === "emailCode" ? styles.active : ""}
-          onClick={() => setMode("emailCode")}
-        >
-          邮箱验证码
-        </button>
-      </div>
+      <Segmented<LoginMode>
+        className={styles.loginMethodTabs}
+        block
+        aria-label="登录方式"
+        options={[
+          { label: "账号密码", value: "password" },
+          { label: "邮箱验证码", value: "emailCode" },
+        ]}
+        value={mode}
+        onChange={setMode}
+      />
 
       {mode === "password" ? (
         <PasswordLoginForm successMessage={successMessage} />

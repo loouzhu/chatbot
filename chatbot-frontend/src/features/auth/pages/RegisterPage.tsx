@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
+import { LockOutlined, MailOutlined, SafetyCertificateOutlined, UserOutlined } from "@ant-design/icons";
+import { Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi, authRuntime } from "../api/authApi";
 import { AuthLayout } from "../components/AuthLayout";
 import { FormField } from "../components/FormField";
-import { LockIcon, MailIcon, ShieldIcon, UserIcon } from "../components/Icons";
 import { StatusMessage } from "../components/StatusMessage";
 import { useVerificationCode } from "../hooks/useVerificationCode";
 import {
@@ -123,7 +124,7 @@ export function RegisterPage() {
         <FormField
           label="邮箱地址"
           type="email"
-          icon={<MailIcon />}
+          icon={<MailOutlined />}
           placeholder="name@example.com"
           autoComplete="email"
           value={email}
@@ -135,7 +136,7 @@ export function RegisterPage() {
         />
         <FormField
           label="用户名"
-          icon={<UserIcon />}
+          icon={<UserOutlined />}
           placeholder="3–8 位中文、英文或数字"
           autoComplete="username"
           value={username}
@@ -148,7 +149,7 @@ export function RegisterPage() {
         <FormField
           label="设置密码"
           type="password"
-          icon={<LockIcon />}
+          icon={<LockOutlined />}
           placeholder="8–64位字符"
           autoComplete="new-password"
           value={password}
@@ -161,7 +162,7 @@ export function RegisterPage() {
         <FormField
           label="确认密码"
           type="password"
-          icon={<LockIcon />}
+          icon={<LockOutlined />}
           placeholder="请再次输入密码"
           autoComplete="new-password"
           value={confirmPassword}
@@ -175,7 +176,7 @@ export function RegisterPage() {
           label="邮箱验证码"
           inputMode="numeric"
           maxLength={6}
-          icon={<ShieldIcon />}
+          icon={<SafetyCertificateOutlined />}
           placeholder="6 位验证码"
           value={emailCode}
           error={errors.emailCode}
@@ -184,28 +185,30 @@ export function RegisterPage() {
             clearError("emailCode");
           }}
           trailing={
-            <button
+            <Button
               className={styles.codeButton}
-              type="button"
               onClick={handleSendCode}
               disabled={!verification.canSend}
+              size="small"
             >
               {verification.sending
                 ? "发送中"
                 : verification.countdown > 0
                   ? `${verification.countdown}s`
                   : "获取验证码"}
-            </button>
+            </Button>
           }
         />
 
-        <button
+        <Button
           className={styles.primaryButton}
-          type="submit"
-          disabled={submitting}
+          type="primary"
+          htmlType="submit"
+          loading={submitting}
+          block
         >
-          {submitting ? <span className={styles.spinner} /> : "创建账号"}
-        </button>
+          创建账号
+        </Button>
         <p className={styles.terms}>注册即表示你同意服务条款与隐私政策</p>
       </form>
     </AuthLayout>

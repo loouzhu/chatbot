@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { TextAreaRef } from "antd/es/input/TextArea";
 import type { ChangeEvent, FormEvent } from "react";
 import type { ChatMessage } from "../types";
 import { sendChatMessage } from "../utils/chatApi";
@@ -9,7 +10,7 @@ export function useChat() {
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const chatWindowRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<TextAreaRef>(null);
 
   useEffect(() => {
     setChatLog(loadChatLog());

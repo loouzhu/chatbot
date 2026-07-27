@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
+import { ArrowLeftOutlined, CheckOutlined, LockOutlined } from "@ant-design/icons";
+import { Button } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
 import { AuthLayout } from "../components/AuthLayout";
 import { FormField } from "../components/FormField";
-import { ArrowLeftIcon, CheckIcon, LockIcon } from "../components/Icons";
 import { StatusMessage } from "../components/StatusMessage";
 import { validatePassword, type FieldErrors } from "../utils/validation";
 import styles from "../styles/Auth.module.less";
@@ -55,8 +56,10 @@ export function ResetPasswordPage() {
         description="当前没有有效的密码重置凭证，请返回找回密码页面。"
         compact
       >
-        <Link className={styles.primaryButton} to="/auth/forgot-password">
-          重新验证
+        <Link to="/auth/forgot-password">
+          <Button className={styles.primaryButton} type="primary" block>
+            重新验证
+          </Button>
         </Link>
       </AuthLayout>
     );
@@ -72,16 +75,17 @@ export function ResetPasswordPage() {
       >
         <div className={styles.successPanel}>
           <span className={styles.successIcon}>
-            <CheckIcon />
+            <CheckOutlined />
           </span>
           <p>为了账号安全，其他设备上的登录状态可能需要重新验证。</p>
-          <button
+          <Button
             className={styles.primaryButton}
-            type="button"
+            type="primary"
             onClick={() => navigate("/auth/login", { replace: true })}
+            block
           >
             返回登录
-          </button>
+          </Button>
         </div>
       </AuthLayout>
     );
@@ -95,7 +99,7 @@ export function ResetPasswordPage() {
       compact
       footer={
         <Link className={styles.backLink} to="/auth/login">
-          <ArrowLeftIcon /> 返回登录
+          <ArrowLeftOutlined /> 返回登录
         </Link>
       }
     >
@@ -104,7 +108,7 @@ export function ResetPasswordPage() {
         <FormField
           label="新密码"
           type="password"
-          icon={<LockIcon />}
+          icon={<LockOutlined />}
           placeholder="请输入新密码"
           autoComplete="new-password"
           value={password}
@@ -117,7 +121,7 @@ export function ResetPasswordPage() {
         <FormField
           label="确认新密码"
           type="password"
-          icon={<LockIcon />}
+          icon={<LockOutlined />}
           placeholder="请再次输入新密码"
           autoComplete="new-password"
           value={confirmPassword}
@@ -127,9 +131,15 @@ export function ResetPasswordPage() {
             setErrors((current) => ({ ...current, confirmPassword: undefined }));
           }}
         />
-        <button className={styles.primaryButton} type="submit" disabled={submitting}>
-          {submitting ? <span className={styles.spinner} /> : "确认修改"}
-        </button>
+        <Button
+          className={styles.primaryButton}
+          type="primary"
+          htmlType="submit"
+          loading={submitting}
+          block
+        >
+          确认修改
+        </Button>
       </form>
     </AuthLayout>
   );

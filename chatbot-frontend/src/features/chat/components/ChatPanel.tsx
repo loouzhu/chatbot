@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import {
-  Bot,
-  LogOut,
-  Menu,
-  MessageSquare,
-  PanelLeftClose,
-  Plus,
-  Sparkles,
-  X,
-} from "lucide-react";
+  CloseOutlined,
+  LogoutOutlined,
+  MenuFoldOutlined,
+  MenuOutlined,
+  MessageOutlined,
+  PlusOutlined,
+  RobotOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import { Avatar, Button } from "antd";
+import { Link } from "react-router-dom";
 import { useChat } from "../hooks/useChat";
 import styles from "../../../app/App.module.less";
 import { ChatWindow } from "./ChatWindow";
@@ -40,9 +41,9 @@ export function ChatPanel() {
   return (
     <main className={styles.chatPage}>
       {sidebarOpen && (
-        <button
+        <Button
           className={styles.sidebarBackdrop}
-          type="button"
+          type="text"
           aria-label="关闭侧边栏"
           onClick={() => setSidebarOpen(false)}
         />
@@ -55,37 +56,58 @@ export function ChatPanel() {
         <div className={styles.sidebarHeader}>
           <div className={styles.sidebarBrand}>
             <span className={styles.logoMark} aria-hidden="true">
-              <Sparkles size={19} />
+              <RobotOutlined />
             </span>
             <span>BlueChat</span>
           </div>
-          <button
+          <Button
             className={styles.iconButton}
-            type="button"
+            type="text"
+            icon={<MenuFoldOutlined />}
             aria-label="收起侧边栏"
             title="收起侧边栏"
             onClick={() => setSidebarOpen(false)}
-          >
-            <PanelLeftClose size={19} />
-          </button>
+          />
         </div>
 
-        <button className={styles.newChatButton} type="button" onClick={startNewChat}>
-          <Plus size={18} />
-          <span>新建对话</span>
-        </button>
+        <Button
+          className={styles.newChatButton}
+          icon={<PlusOutlined />}
+          onClick={startNewChat}
+          block
+        >
+          新建对话
+        </Button>
 
         <div className={styles.historySection}>
           <p className={styles.historyLabel}>最近</p>
-          <button className={styles.historyItem} type="button" aria-current="page">
-            <MessageSquare size={17} />
+          <Button
+            className={styles.historyItem}
+            type="text"
+            icon={<MessageOutlined />}
+            aria-current="page"
+            block
+          >
             <span>{conversationTitle}</span>
-          </button>
+          </Button>
         </div>
 
         <div className={styles.sidebarFooter}>
-          <Link className={styles.sidebarFooterItem} to="/auth/login">
-            <LogOut size={18} />
+          <div className={styles.sidebarProfile}>
+            <Avatar
+              className={styles.sidebarAvatar}
+              size={30}
+              icon={<UserOutlined />}
+            />
+            <span>我的账户</span>
+          </div>
+          <Link
+            className={`${styles.sidebarFooterItem} ${styles.sidebarLogout}`}
+            to="/auth/login"
+            aria-label="退出登录"
+            title="退出登录"
+          >
+            <LogoutOutlined />
             <span>退出登录</span>
           </Link>
         </div>
@@ -93,30 +115,28 @@ export function ChatPanel() {
 
       <section className={styles.mainPanel} aria-label="BlueChat 智能对话">
         <header className={styles.chatHeader}>
-          <button
+          <Button
             className={`${styles.iconButton} ${styles.menuButton}`}
-            type="button"
+            type="text"
+            icon={sidebarOpen ? <CloseOutlined /> : <MenuOutlined />}
             aria-label={sidebarOpen ? "关闭侧边栏" : "打开侧边栏"}
             title={sidebarOpen ? "关闭侧边栏" : "打开侧边栏"}
             onClick={() => setSidebarOpen((open) => !open)}
-          >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          />
           <div className={styles.headerTitle}>
-            <Bot size={19} aria-hidden="true" />
+            <RobotOutlined aria-hidden="true" />
             <span>BlueChat</span>
             <small>AI 助手</small>
           </div>
-          <button
+          <Button
             className={styles.headerNewChat}
-            type="button"
+            icon={<PlusOutlined />}
             onClick={startNewChat}
             aria-label="新建对话"
             title="新建对话"
           >
-            <Plus size={19} />
             <span>新对话</span>
-          </button>
+          </Button>
         </header>
 
         <ChatWindow

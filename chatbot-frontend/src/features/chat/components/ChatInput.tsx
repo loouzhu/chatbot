@@ -1,11 +1,13 @@
 import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
-import { ArrowUp, Paperclip } from "lucide-react";
+import { ArrowUpOutlined, PaperClipOutlined } from "@ant-design/icons";
+import { Button, Input } from "antd";
+import type { TextAreaRef } from "antd/es/input/TextArea";
 import styles from "../../../app/App.module.less";
 
 interface ChatInputProps {
   userInput: string;
   loading: boolean;
-  inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  inputRef: React.RefObject<TextAreaRef | null>;
   onInputChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
@@ -21,24 +23,36 @@ export function ChatInput({ userInput, loading, inputRef, onInputChange, onSubmi
   return (
     <div className={styles.composerArea}>
       <form className={styles.chatForm} onSubmit={onSubmit}>
-        <textarea
+        <Input.TextArea
           ref={inputRef}
-          rows={1}
+          autoSize={{ minRows: 1, maxRows: 6 }}
           value={userInput}
           onChange={onInputChange}
           onKeyDown={handleKeyDown}
           placeholder="给 BlueChat 发送消息"
           disabled={loading}
           aria-label="输入聊天消息"
+          variant="borderless"
         />
         <div className={styles.composerActions}>
-          <button className={styles.attachButton} type="button" disabled aria-label="添加附件（即将支持）" title="添加附件（即将支持）">
-            <Paperclip size={19} />
-          </button>
+          <Button
+            className={styles.attachButton}
+            type="text"
+            icon={<PaperClipOutlined />}
+            disabled
+            aria-label="添加附件（即将支持）"
+            title="添加附件（即将支持）"
+          />
           <span className={styles.inputHint}>Enter 发送 · Shift + Enter 换行</span>
-          <button className={styles.sendButton} type="submit" disabled={loading || !userInput.trim()} aria-label="发送消息" title="发送消息">
-            <ArrowUp size={20} />
-          </button>
+          <Button
+            className={styles.sendButton}
+            type="primary"
+            htmlType="submit"
+            icon={<ArrowUpOutlined />}
+            disabled={loading || !userInput.trim()}
+            aria-label="发送消息"
+            title="发送消息"
+          />
         </div>
       </form>
       <p className={styles.disclaimer}>BlueChat 可能会出错，请核查重要信息。</p>

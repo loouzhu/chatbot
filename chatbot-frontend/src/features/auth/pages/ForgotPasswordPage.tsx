@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
+import { ArrowLeftOutlined, MailOutlined, SafetyCertificateOutlined, UserOutlined } from "@ant-design/icons";
+import { Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi, authRuntime } from "../api/authApi";
 import { AuthLayout } from "../components/AuthLayout";
 import { FormField } from "../components/FormField";
-import { ArrowLeftIcon, MailIcon, ShieldIcon, UserIcon } from "../components/Icons";
 import { StatusMessage } from "../components/StatusMessage";
 import { useVerificationCode } from "../hooks/useVerificationCode";
 import {
@@ -92,7 +93,7 @@ export function ForgotPasswordPage() {
       compact
       footer={
         <Link className={styles.backLink} to="/auth/login">
-          <ArrowLeftIcon /> 返回登录
+          <ArrowLeftOutlined /> 返回登录
         </Link>
       }
     >
@@ -103,7 +104,7 @@ export function ForgotPasswordPage() {
         <FormField
           label="注册邮箱"
           type="email"
-          icon={<MailIcon />}
+          icon={<MailOutlined />}
           placeholder="name@example.com"
           autoComplete="email"
           value={email}
@@ -115,7 +116,7 @@ export function ForgotPasswordPage() {
         />
         <FormField
           label="用户名"
-          icon={<UserIcon />}
+          icon={<UserOutlined />}
           placeholder="请输入你的用户名"
           autoComplete="username"
           value={username}
@@ -129,7 +130,7 @@ export function ForgotPasswordPage() {
           label="邮箱验证码"
           inputMode="numeric"
           maxLength={6}
-          icon={<ShieldIcon />}
+          icon={<SafetyCertificateOutlined />}
           placeholder="6 位验证码"
           value={emailCode}
           error={errors.emailCode}
@@ -138,24 +139,30 @@ export function ForgotPasswordPage() {
             clearError("emailCode");
           }}
           trailing={
-            <button
+            <Button
               className={styles.codeButton}
-              type="button"
               onClick={handleSendCode}
               disabled={!verification.canSend}
+              size="small"
             >
               {verification.sending
                 ? "发送中"
                 : verification.countdown > 0
                   ? `${verification.countdown}s`
                   : "获取验证码"}
-            </button>
+            </Button>
           }
         />
 
-        <button className={styles.primaryButton} type="submit" disabled={submitting}>
-          {submitting ? <span className={styles.spinner} /> : "验证并继续"}
-        </button>
+        <Button
+          className={styles.primaryButton}
+          type="primary"
+          htmlType="submit"
+          loading={submitting}
+          block
+        >
+          验证并继续
+        </Button>
       </form>
     </AuthLayout>
   );

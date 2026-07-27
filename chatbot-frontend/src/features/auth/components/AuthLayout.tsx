@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
 import styles from "../styles/Auth.module.less";
 
 interface AuthLayoutProps {
@@ -22,10 +21,6 @@ export function AuthLayout({
   return (
     <main className={styles.authPage}>
       <div className={styles.ambientGlow} aria-hidden="true" />
-      <Link className={styles.brand} to="/auth/login" aria-label="返回登录页">
-
-      </Link>
-
       <section
         className={`${styles.authCard} ${compact ? styles.authCardCompact : ""}`}
       >
