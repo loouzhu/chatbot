@@ -1,0 +1,123 @@
+.composerArea {
+  width: 100%;
+  padding: 10px 24px 12px;
+  flex: 0 0 auto;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #ffffff 22%);
+}
+
+.chatForm {
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: 13px 13px 9px;
+  border: 1px solid #d8d8d4;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 7px 24px rgba(25, 27, 23, 0.08);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.chatForm:focus-within {
+  border-color: #aeb0aa;
+  box-shadow: 0 8px 28px rgba(25, 27, 23, 0.11);
+}
+
+.chatForm textarea {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  max-height: 160px;
+  padding: 2px 3px 5px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  field-sizing: content;
+  color: #292a27;
+  background: transparent;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-y: auto;
+}
+
+.chatForm textarea::placeholder {
+  color: #969791;
+}
+
+.composerActions {
+  display: flex;
+  height: 34px;
+  margin-top: 4px;
+  align-items: center;
+  gap: 8px;
+}
+
+.attachButton,
+.sendButton {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  flex: 0 0 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+}
+
+.attachButton {
+  color: #9a9b96;
+  background: transparent;
+  cursor: not-allowed;
+}
+
+.inputHint {
+  min-width: 0;
+  flex: 1 1 auto;
+  color: #9a9b96;
+  font-size: 11px;
+}
+
+.sendButton {
+  color: #ffffff;
+  background: #20211f;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+
+.sendButton:hover:not(:disabled) {
+  background: #0b7a68;
+  transform: translateY(-1px);
+}
+
+.sendButton:disabled {
+  color: #b6b7b2;
+  background: #ececea;
+  cursor: not-allowed;
+}
+
+.disclaimer {
+  margin: 7px 0 0;
+  color: #969791;
+  font-size: 11px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .composerArea {
+    padding: 8px 10px max(8px, env(safe-area-inset-bottom));
+  }
+
+  .chatForm {
+    padding: 10px 10px 7px;
+    border-radius: 14px;
+  }
+
+  .inputHint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chatForm,
+  .sendButton {
+    transition: none;
+  }
+}

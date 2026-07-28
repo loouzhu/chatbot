@@ -12,7 +12,7 @@ import {
 import { Avatar, Button } from "antd";
 import { Link } from "react-router-dom";
 import { useChat } from "../hooks/useChat";
-import styles from "../../../app/App.module.less";
+import styles from "./ChatPanel.module.less";
 import { ChatWindow } from "./ChatWindow";
 import { ChatInput } from "./ChatInput";
 

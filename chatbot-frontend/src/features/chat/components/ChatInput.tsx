@@ -2,7 +2,7 @@ import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { ArrowUpOutlined, PaperClipOutlined } from "@ant-design/icons";
 import { Button, Input } from "antd";
 import type { TextAreaRef } from "antd/es/input/TextArea";
-import styles from "../../../app/App.module.less";
+import styles from "./ChatInput.module.less";
 
 interface ChatInputProps {
   userInput: string;

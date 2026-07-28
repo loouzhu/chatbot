@@ -6,8 +6,10 @@ class ChatService:
     def __init__(self, deepseek_client: DeepSeekClient):
         self.deepseek_client = deepseek_client
 
-    async def send_message(self, user_message: str) -> str:
-        message = user_message.strip()
-        if not message:
-            raise ValidationException("发送内容不能为空")
-        return await self.deepseek_client.ask(message)
+
+async def send_message(user_message: str) -> str:
+    message = user_message.strip()
+    deepseek_client = DeepSeekClient()
+    if not message:
+        raise ValidationException("发送内容不能为空")
+    return await deepseek_client.ask(message)
