@@ -21,10 +21,10 @@ class Conversation(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    messages = relationship(back_populates="conversation")
+    messages: Mapped[list["ChatMessages"]] = relationship(back_populates="conversation")
 
 
-class ChatMessage(Base):
+class ChatMessages(Base):
     __tablename__ = "chat_messages"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
