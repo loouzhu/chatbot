@@ -1,8 +1,13 @@
 import { useState, type FormEvent } from "react";
-import { KeyOutlined, LockOutlined, MailOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  KeyOutlined,
+  LockOutlined,
+  MailOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { Button, Segmented } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { authApi, authRuntime } from "../api/authApi";
+import { authApi } from "../api/authApi";
 import { AuthLayout } from "../components/AuthLayout";
 import { FormField } from "../components/FormField";
 import { StatusMessage } from "../components/StatusMessage";
@@ -46,7 +51,9 @@ function PasswordLoginForm({ successMessage }: LoginFormProps) {
       await authApi.loginWithPassword({ username: username.trim(), password });
       navigate("/chat", { replace: true });
     } catch (error) {
-      setRequestError(error instanceof Error ? error.message : "账号或密码错误");
+      setRequestError(
+        error instanceof Error ? error.message : "账号或密码错误",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -54,8 +61,12 @@ function PasswordLoginForm({ successMessage }: LoginFormProps) {
 
   return (
     <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
-      {successMessage && <StatusMessage type="success">{successMessage}</StatusMessage>}
-      {requestError && <StatusMessage type="error">{requestError}</StatusMessage>}
+      {successMessage && (
+        <StatusMessage type="success">{successMessage}</StatusMessage>
+      )}
+      {requestError && (
+        <StatusMessage type="error">{requestError}</StatusMessage>
+      )}
 
       <FormField
         label="账号"
@@ -119,15 +130,15 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
     if (emailError || !verification.canSend) return;
 
     try {
-      const challenge = await verification.send(() => authApi.requestLoginCode(email.trim()));
-      setCodeSentTo(email.trim());
-      setNotice(
-        authRuntime.isMock
-          ? `演示验证码：${challenge.developmentCode}`
-          : "验证码已发送，请前往邮箱查看",
+      const challenge = await verification.send(() =>
+        authApi.requestLoginCode(email.trim()),
       );
+      setCodeSentTo(email.trim());
+      setNotice("验证码已发送，请前往邮箱查看");
     } catch (error) {
-      setRequestError(error instanceof Error ? error.message : "验证码发送失败，请稍后重试");
+      setRequestError(
+        error instanceof Error ? error.message : "验证码发送失败，请稍后重试",
+      );
     }
   }
 
@@ -138,7 +149,8 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
       verifyCode: validateEmailCode(verifyCode),
     };
     if (!verification.challenge) nextErrors.verifyCode = "请先获取邮箱验证码";
-    else if (codeSentTo !== email.trim()) nextErrors.verifyCode = "邮箱已更改，请重新获取验证码";
+    else if (codeSentTo !== email.trim())
+      nextErrors.verifyCode = "邮箱已更改，请重新获取验证码";
     setErrors(nextErrors);
     setRequestError("");
     if (Object.values(nextErrors).some(Boolean)) return;
@@ -148,7 +160,9 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
       await authApi.loginWithEmailCode({ email: email.trim(), verifyCode });
       navigate("/chat", { replace: true });
     } catch (error) {
-      setRequestError(error instanceof Error ? error.message : "邮箱或验证码错误");
+      setRequestError(
+        error instanceof Error ? error.message : "邮箱或验证码错误",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -156,8 +170,12 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
 
   return (
     <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
-      {successMessage && <StatusMessage type="success">{successMessage}</StatusMessage>}
-      {requestError && <StatusMessage type="error">{requestError}</StatusMessage>}
+      {successMessage && (
+        <StatusMessage type="success">{successMessage}</StatusMessage>
+      )}
+      {requestError && (
+        <StatusMessage type="error">{requestError}</StatusMessage>
+      )}
       {notice && <StatusMessage type="info">{notice}</StatusMessage>}
 
       <FormField
@@ -226,7 +244,8 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
 
 export function LoginPage() {
   const location = useLocation();
-  const successMessage = (location.state as { message?: string } | null)?.message;
+  const successMessage = (location.state as { message?: string } | null)
+    ?.message;
   const [mode, setMode] = useState<LoginMode>("password");
 
   return (

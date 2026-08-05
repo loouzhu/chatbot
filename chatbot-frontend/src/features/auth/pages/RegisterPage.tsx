@@ -1,8 +1,13 @@
 import { useState, type FormEvent } from "react";
-import { LockOutlined, MailOutlined, SafetyCertificateOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  LockOutlined,
+  MailOutlined,
+  SafetyCertificateOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { authApi, authRuntime } from "../api/authApi";
+import { authApi } from "../api/authApi";
 import { AuthLayout } from "../components/AuthLayout";
 import { FormField } from "../components/FormField";
 import { StatusMessage } from "../components/StatusMessage";
@@ -46,11 +51,7 @@ export function RegisterPage() {
       const challenge = await verification.send(() =>
         authApi.requestRegistrationCode(email.trim()),
       );
-      setNotice(
-        authRuntime.isMock
-          ? `邮件服务尚未接入，演示验证码为 ${challenge.developmentCode}`
-          : "验证码已发送，请前往邮箱查看",
-      );
+      setNotice("验证码已发送，请前往邮箱查看");
     } catch (error) {
       setRequestError(
         error instanceof Error ? error.message : "验证码发送失败",

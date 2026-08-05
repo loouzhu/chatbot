@@ -1,8 +1,13 @@
 import { useState, type FormEvent } from "react";
-import { ArrowLeftOutlined, MailOutlined, SafetyCertificateOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  MailOutlined,
+  SafetyCertificateOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { authApi, authRuntime } from "../api/authApi";
+import { authApi } from "../api/authApi";
 import { AuthLayout } from "../components/AuthLayout";
 import { FormField } from "../components/FormField";
 import { StatusMessage } from "../components/StatusMessage";
@@ -46,13 +51,11 @@ export function ForgotPasswordPage() {
       const challenge = await verification.send(() =>
         authApi.requestPasswordReset(email.trim(), username.trim()),
       );
-      setNotice(
-        authRuntime.isMock
-          ? `邮件服务尚未接入，演示验证码为 ${challenge.developmentCode}`
-          : "如果账号信息匹配，验证码将发送到你的邮箱",
-      );
+      setNotice("如果账号信息匹配，验证码将发送到你的邮箱");
     } catch (error) {
-      setRequestError(error instanceof Error ? error.message : "验证码发送失败");
+      setRequestError(
+        error instanceof Error ? error.message : "验证码发送失败",
+      );
     }
   }
 
@@ -79,7 +82,9 @@ export function ForgotPasswordPage() {
         state: { resetToken: result.resetToken },
       });
     } catch (error) {
-      setRequestError(error instanceof Error ? error.message : "验证失败，请稍后重试");
+      setRequestError(
+        error instanceof Error ? error.message : "验证失败，请稍后重试",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -98,7 +103,9 @@ export function ForgotPasswordPage() {
       }
     >
       <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
-        {requestError && <StatusMessage type="error">{requestError}</StatusMessage>}
+        {requestError && (
+          <StatusMessage type="error">{requestError}</StatusMessage>
+        )}
         {notice && <StatusMessage type="info">{notice}</StatusMessage>}
 
         <FormField
