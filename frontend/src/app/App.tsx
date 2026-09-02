@@ -1,14 +1,11 @@
 import { RouterProvider } from "react-router-dom";
 import { ConfigProvider } from "antd";
+import { MessageProvider } from "./context";
 import zhCN from "antd/locale/zh_CN";
 import { router } from "./routers";
-import {
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 function App() {
-
   const queryClient = new QueryClient();
 
   return (
@@ -24,7 +21,9 @@ function App() {
           },
         }}
       >
-        <RouterProvider router={router} />
+        <MessageProvider>
+          <RouterProvider router={router} />
+        </MessageProvider>
       </ConfigProvider>
     </QueryClientProvider>
   );
