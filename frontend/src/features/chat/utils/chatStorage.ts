@@ -23,7 +23,7 @@ export function loadChatLog(): ChatMessage[] {
 
     const parsedChatLog: unknown = JSON.parse(storedChatLog);
     if (Array.isArray(parsedChatLog) && parsedChatLog.every(isChatMessage)) {
-      return parsedChatLog;
+      return parsedChatLog as ChatMessage[];
     }
   } catch (error) {
     console.error("Failed to load chat log from localStorage:", error);

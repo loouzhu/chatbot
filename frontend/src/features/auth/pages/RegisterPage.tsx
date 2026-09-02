@@ -48,7 +48,7 @@ export function RegisterPage() {
     if (emailError || !verification.canSend) return;
 
     try {
-      const challenge = await verification.send(() =>
+      await verification.send(() =>
         authApi.requestRegistrationCode(email.trim()),
       );
       setNotice("验证码已发送，请前往邮箱查看");

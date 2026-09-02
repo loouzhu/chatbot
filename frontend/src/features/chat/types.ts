@@ -1,15 +1,8 @@
-interface ChatContent {
-  type: string;
-  data: string;
-}
+export type ChatMessageType = "user" | "bot" | "error";
 
 export interface ChatMessage {
-  id: string;
-  conversationId: string;
-  role: "user" | "assistant" | "system";
-  content: string | ChatContent[];
-  status: "success" | "failed" | "pending" | "refuse";
-  createdAt: Date;
+  type: ChatMessageType;
+  text: string;
 }
 
 export interface Conversation {
