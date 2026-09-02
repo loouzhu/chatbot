@@ -2,7 +2,8 @@
   "compilerOptions": {
     "paths": {
       "@chat/*": ["./src/features/chat/*"],
-      "@auth/*": ["./src/features/auth/*"]
+      "@auth/*": ["./src/features/auth/*"],
+      "@shared/*": ["./src/features/shared/*"],
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2020",

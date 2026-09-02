@@ -6,12 +6,13 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { Button, Segmented } from "antd";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
 import { AuthLayout } from "../components/AuthLayout";
 import { FormField } from "../components/FormField";
 import { StatusMessage } from "../components/StatusMessage";
 import { useVerificationCode } from "../hooks/useVerificationCode";
+import { useLoginWithPassword } from "../hooks/useAuth";
 import {
   validateEmail,
   validateEmailCode,
@@ -24,31 +25,11 @@ type LoginMode = "password" | "emailCode";
 type PasswordField = "username" | "password";
 type EmailCodeField = "email" | "verifyCode";
 
-interface LoginFormProps {
-  successMessage?: string;
-}
-
-function PasswordLoginForm({ successMessage }: LoginFormProps) {
-  const navigate = useNavigate();
+function PasswordLoginForm() {
+  const loginMutation = useLoginWithPassword();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FieldErrors<PasswordField>>({});
-  const [requestError, setRequestError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [successNotice, setSuccessNotice] = useState(successMessage ?? "");
-
-  useEffect(() => {
-    setSuccessNotice(successMessage ?? "");
-  }, [successMessage]);
-
-  useEffect(() => {
-    if (!successNotice && !requestError) return;
-    const timer = setTimeout(() => {
-      setSuccessNotice("");
-      setRequestError("");
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [successNotice, requestError]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,30 +38,12 @@ function PasswordLoginForm({ successMessage }: LoginFormProps) {
       password: password ? undefined : "请输入密码",
     };
     setErrors(nextErrors);
-    setRequestError("");
     if (Object.values(nextErrors).some(Boolean)) return;
-
-    setSubmitting(true);
-    try {
-      await authApi.loginWithPassword({ username: username.trim(), password });
-      navigate("/chat", { replace: true });
-    } catch (error) {
-      setRequestError(
-        error instanceof Error ? error.message : "账号或密码错误",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    loginMutation.mutate({ username: username.trim(), password });
   }
 
   return (
     <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
-      {successNotice && (
-        <StatusMessage type="success">{successNotice}</StatusMessage>
-      )}
-      {requestError && (
-        <StatusMessage type="error">{requestError}</StatusMessage>
-      )}
 
       <FormField
         label="账号"
@@ -116,16 +79,16 @@ function PasswordLoginForm({ successMessage }: LoginFormProps) {
         className={styles.primaryButton}
         type="primary"
         htmlType="submit"
-        loading={submitting}
         block
+        disabled={loginMutation.isPending}
       >
-        登录
+        {loginMutation.isPending ? "加载中" : "登录"}
       </Button>
     </form>
   );
 }
 
-function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
+function EmailCodeLoginForm() {
   const navigate = useNavigate();
   const verification = useVerificationCode();
   const [email, setEmail] = useState("");
@@ -190,12 +153,6 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
 
   return (
     <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
-      {successMessage && (
-        <StatusMessage type="success">{successMessage}</StatusMessage>
-      )}
-      {requestError && (
-        <StatusMessage type="error">{requestError}</StatusMessage>
-      )}
       {notice && <StatusMessage type="info">{notice}</StatusMessage>}
 
       <FormField
@@ -263,9 +220,6 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
 }
 
 export function LoginPage() {
-  const location = useLocation();
-  const successMessage = (location.state as { message?: string } | null)
-    ?.message;
   const [mode, setMode] = useState<LoginMode>("password");
 
   return (
@@ -293,9 +247,9 @@ export function LoginPage() {
       />
 
       {mode === "password" ? (
-        <PasswordLoginForm successMessage={successMessage} />
+        <PasswordLoginForm />
       ) : (
-        <EmailCodeLoginForm successMessage={successMessage} />
+        <EmailCodeLoginForm />
       )}
     </AuthLayout>
   );

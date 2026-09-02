@@ -58,11 +58,7 @@ export const authApi = {
       { email: input.email, verify_code: input.verifyCode },
     );
     return {
-      user: {
-        id: response.email,
-        email: response.email,
-        username: "",
-      },
+      user: { id: response.email, email: response.email, username: "" },
       accessToken: "development-session",
     };
   },

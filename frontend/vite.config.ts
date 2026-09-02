@@ -19,6 +19,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       "@chat": path.resolve(__dirname, "./src/features/chat"),
       "@auth": path.resolve(__dirname, "./src/features/auth"),
+      "@shared": path.resolve(__dirname, "./src/features/shared"),
     },
   },
 });
