@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 chat_router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
-@chat_router.post("", response_model=ChatResponse)
+@chat_router.post("/send_message", response_model=ChatResponse)
 async def chat(
     request: ChatRequest, service: ChatService = Depends(get_chat_service)
 ) -> ChatResponse:

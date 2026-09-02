@@ -3,7 +3,7 @@ import uuid
 from app.core.exceptions import ValidationException
 from app.features.chat.llm.base import LLMClient, LLMMessage
 from app.features.chat.llm.deepseek import DeepSeekProvider
-from app.features.chat.models import ChatMessages, Conversation
+from app.features.chat.model import ChatMessage, Conversation
 from app.features.chat.repository import ChatRepository
 
 
@@ -14,12 +14,12 @@ class ChatService:
 
     async def transform_message(
         self, message: str, conversation_id: str, role: str
-    ) -> ChatMessages:
+    ) -> ChatMessage:
         new_content = message.strip()
 
         if not new_content:
             raise ValidationException("发送内容不能为空", 400)
-        new_message = ChatMessages(
+        new_message = ChatMessage(
             id=str(uuid.uuid4()),
             content=new_content,
             role=role,

@@ -1,5 +1,6 @@
 from app.db.session import get_db
 from app.features.chat.models import ChatMessages, Conversation
+from app.features.chat.service import ChatService
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,7 +32,5 @@ class ChatRepository:
 
 
 async def get_chat_service(db: AsyncSession = Depends(get_db)):
-    from app.features.chat.service import ChatService
-
     repository = ChatRepository(db)
     return ChatService(repository)

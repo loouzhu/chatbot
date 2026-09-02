@@ -2,15 +2,16 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from app.db.base import Base
+from app.features.chat.model import Conversation
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 # 用户表
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "user"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[String] = mapped_column(primary_key=True, index=True)
     email: Mapped[str] = mapped_column(
         String(255), unique=True, nullable=False, index=True
     )
@@ -35,6 +36,10 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    conversations: Mapped[list["Conversation"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 # 验证码表
@@ -43,7 +48,7 @@ class VerificationCode(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("user.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
     )
@@ -69,7 +74,7 @@ class PasswordResetToken(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("user.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -95,7 +100,7 @@ class Session(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("user.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
