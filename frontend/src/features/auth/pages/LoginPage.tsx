@@ -153,9 +153,6 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
     if (emailError || !verification.canSend) return;
 
     try {
-      const challenge = await verification.send(() =>
-        authApi.requestLoginCode(email.trim()),
-      );
       setCodeSentTo(email.trim());
       setNotice("验证码已发送，请前往邮箱查看");
     } catch (error) {
