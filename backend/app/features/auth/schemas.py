@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Literal
 
 from app.core.exceptions import ValidationException
@@ -60,11 +61,16 @@ class UsernameLoginResponse(BaseModel):
     code: str = "SUCCESS"
 
 
+class Purpose(str, Enum):
+    REGISTER = "register"
+    LOGIN = "login"
+
+
 class SendVerifyCodeRequest(BaseModel):
     email: EmailStr
     username: str
     code: str
-    purpose: Literal["register", "login"] = "register"
+    purpose: Purpose
 
 
 class SendVerifyCodeResponse(BaseModel):
