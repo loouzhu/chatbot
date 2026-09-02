@@ -4,9 +4,13 @@ import pytest
 from app.cache.verify_code import send_limit_key, verify_code_key
 from app.features.auth.schemas import (
     EmailLoginRequest,
+    EmailLoginResponse,
     RegisterRequest,
+    RegisterResponse,
     SendVerifyCodeRequest,
+    SendVerifyCodeResponse,
     UsernameLoginRequest,
+    UsernameLoginResponse,
 )
 from app.features.auth.service import (
     email_login_user,
@@ -14,6 +18,25 @@ from app.features.auth.service import (
     send_verify_code,
     username_login_user,
 )
+
+
+def test_auth_response_models_only_include_message_and_code():
+    assert set(EmailLoginResponse(message="登录成功", code="SUCCESS").model_dump().keys()) == {
+        "message",
+        "code",
+    }
+    assert set(RegisterResponse(message="注册成功", code="SUCCESS").model_dump().keys()) == {
+        "message",
+        "code",
+    }
+    assert set(UsernameLoginResponse(message="登录成功", code="SUCCESS").model_dump().keys()) == {
+        "message",
+        "code",
+    }
+    assert set(SendVerifyCodeResponse(message="发送验证码成功", code="SUCCESS").model_dump().keys()) == {
+        "message",
+        "code",
+    }
 
 
 @pytest.mark.asyncio

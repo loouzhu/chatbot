@@ -20,8 +20,8 @@ from passlib.context import CryptContext
 
 
 class AuthException(AppException):
-    def __init__(self, message: str, status_code: int = 400, code: str = ""):
-        super().__init__(message, status_code, code)
+    def __init__(self, message: str, code: str = "ERROR"):
+        super().__init__(message, code)
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
@@ -35,7 +35,7 @@ def generate_code(email: str, purpose: str = "register") -> str:
     limit_key = send_limit_key("auth", purpose, email)
 
     if redis_client.get(limit_key):
-        raise AuthException("请稍后再试", 400)
+        raise AuthException("请稍后再试", "RATE_LIMITED")
 
     redis_client.set(name=code_key, value=verify_code, ex=300, nx=True)
     redis_client.set(name=limit_key, value="1", ex=60, nx=True)
@@ -53,16 +53,14 @@ async def send_verify_code(request: SendVerifyCodeRequest):
         )
         print(res)
         return SendVerifyCodeResponse(
-            email=request.email,
-            username=request.username,
-            code=200,
             message="发送验证码成功",
+            code="SUCCESS",
         )
     except Exception:
         redis_client.delete(
             verify_code_key("auth", request.purpose, str(request.email))
         )
-        raise AuthException("发送验证码失败", 500)
+        raise AuthException("发送验证码失败", "SEND_VERIFY_CODE_FAILED")
 
 
 async def register_user(request: RegisterRequest, db) -> RegisterResponse:
@@ -74,13 +72,13 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
         verify_code = redis_client.get(verify_code_key("auth", "register", email))
 
         if repository.get_user_by_email(request.email):
-            raise AuthException("邮箱已被注册", 409)
+            raise AuthException("邮箱已被注册", "EMAIL_EXISTS")
 
         if repository.get_user_by_username(request.username):
-            raise AuthException("用户名已被占用", 409)
+            raise AuthException("用户名已被占用", "USERNAME_EXISTS")
 
         if request.verify_code != str(verify_code):
-            raise AuthException("验证码不正确", 400)
+            raise AuthException("验证码不正确", "INVALID_VERIFY_CODE")
 
         user = repository.create_user(
             email=email,
@@ -90,12 +88,13 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
         db.commit()
         redis_client.delete(verify_code_key("auth", "register", email))
         return RegisterResponse(
-            email=user.email,
-            username=user.username,
             message="注册成功",
+            code="SUCCESS",
         )
     except Exception as e:
-        raise AuthException(f"创建用户失败,{e}", 500)
+        if isinstance(e, AppException):
+            raise
+        raise AuthException(f"创建用户失败,{e}", "CREATE_USER_FAILED")
     finally:
         db.close()
 
@@ -108,18 +107,20 @@ async def email_login_user(request: EmailLoginRequest, db) -> EmailLoginResponse
         user = repository.get_user_by_email(email)
 
         if not user:
-            raise AuthException("未注册的邮箱", 401)
+            raise AuthException("未注册的邮箱", "EMAIL_NOT_FOUND")
 
         if request.verify_code != str(verify_code):
-            raise AuthException("验证码不正确", 400)
+            raise AuthException("验证码不正确", "INVALID_VERIFY_CODE")
 
         redis_client.delete(verify_code_key("auth", "login", email))
         return EmailLoginResponse(
-            email=user.email,
             message="登录成功",
+            code="SUCCESS",
         )
-    except Exception:
-        raise AuthException("邮箱登录失败", 500)
+    except Exception as e:
+        if isinstance(e, AppException):
+            raise
+        raise AuthException("邮箱登录失败", "EMAIL_LOGIN_FAILED")
     finally:
         db.close()
 
@@ -132,16 +133,18 @@ async def username_login_user(
         user = repository.get_user_by_username(request.username)
 
         if not user:
-            raise AuthException("用户不存在", 401)
+            raise AuthException("用户不存在", "USER_NOT_FOUND")
 
         if not verify_password(request.password, user.password_hash):
-            raise AuthException("用户名或密码错误", 401)
+            raise AuthException("用户名或密码错误", "INVALID_PASSWORD")
 
         return UsernameLoginResponse(
-            username=user.username,
             message="登录成功",
+            code="SUCCESS",
         )
-    except Exception:
-        raise AuthException("用户名密码登录失败", 500)
+    except Exception as e:
+        if isinstance(e, AppException):
+            raise
+        raise AuthException("用户名密码登录失败", "USERNAME_LOGIN_FAILED")
     finally:
         db.close()

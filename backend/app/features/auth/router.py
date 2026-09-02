@@ -31,7 +31,7 @@ async def verify_code(
         return await send_verify_code(request)
     except AppException as exc:
         return JSONResponse(
-            status_code=exc.status_code,
+            status_code=400,
             content={"message": exc.message, "code": exc.code},
         )
 
@@ -46,7 +46,7 @@ async def register(
         return await register_user(request, db)
     except AppException as exc:
         return JSONResponse(
-            status_code=exc.status_code,
+            status_code=400,
             content={"message": exc.message, "code": exc.code},
         )
 
@@ -59,7 +59,7 @@ async def email_login(
         return await email_login_user(request, db)
     except AppException as exc:
         return JSONResponse(
-            status_code=exc.status_code,
+            status_code=400,
             content={"message": exc.message, "code": exc.code},
         )
 
@@ -75,6 +75,6 @@ async def username_login(
         return await username_login_user(request, db)
     except AppException as exc:
         return JSONResponse(
-            status_code=exc.status_code,
+            status_code=400,
             content={"message": exc.message, "code": exc.code},
         )

@@ -36,9 +36,8 @@ class RegisterRequest(BaseModel):
 
 
 class RegisterResponse(BaseModel):
-    email: str
-    username: str
     message: str
+    code: str = "SUCCESS"
 
 
 class EmailLoginRequest(BaseModel):
@@ -47,8 +46,8 @@ class EmailLoginRequest(BaseModel):
 
 
 class EmailLoginResponse(BaseModel):
-    email: str
     message: str
+    code: str = "SUCCESS"
 
 
 class UsernameLoginRequest(BaseModel):
@@ -57,8 +56,8 @@ class UsernameLoginRequest(BaseModel):
 
 
 class UsernameLoginResponse(BaseModel):
-    username: str
     message: str
+    code: str = "SUCCESS"
 
 
 class SendVerifyCodeRequest(BaseModel):
@@ -69,7 +68,5 @@ class SendVerifyCodeRequest(BaseModel):
 
 
 class SendVerifyCodeResponse(BaseModel):
-    email: EmailStr
-    username: str
-    code: int
     message: str
+    code: str = "SUCCESS"

@@ -1,6 +1,6 @@
 const CHAT_API_URL =
   (import.meta.env.VITE_CHAT_API_URL as string | undefined) ??
-  "http://localhost:8000/chat";
+  "http://101.37.70.188:8000/chat";
 
 interface ChatApiResponse {
   response: string;
