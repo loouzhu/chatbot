@@ -67,7 +67,6 @@ export const authApi = {
     await request("/auth/verify_code", {
       email,
       username: email,
-      code: "",
       purpose: "login",
     });
     return { verificationId: `login:${email}`, expiresIn: 300 };

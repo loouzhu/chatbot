@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import {
   KeyOutlined,
   LockOutlined,
@@ -7,12 +7,14 @@ import {
 } from "@ant-design/icons";
 import { Button, Segmented } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { authApi } from "../api/authApi";
 import { AuthLayout } from "../components/AuthLayout";
 import { FormField } from "../components/FormField";
-import { StatusMessage } from "../components/StatusMessage";
+import {
+  useLoginWithEmailCode,
+  useLoginWithPassword,
+  useRequestLoginCode,
+} from "../hooks/useAuth";
 import { useVerificationCode } from "../hooks/useVerificationCode";
-import { useLoginWithPassword } from "../hooks/useAuth";
 import {
   validateEmail,
   validateEmailCode,
@@ -91,37 +93,26 @@ function PasswordLoginForm() {
 function EmailCodeLoginForm() {
   const navigate = useNavigate();
   const verification = useVerificationCode();
+  const requestLoginCodeMutation = useRequestLoginCode();
+  const loginWithEmailCodeMutation = useLoginWithEmailCode();
   const [email, setEmail] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [codeSentTo, setCodeSentTo] = useState("");
   const [errors, setErrors] = useState<FieldErrors<EmailCodeField>>({});
-  const [notice, setNotice] = useState("");
-  const [requestError, setRequestError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!notice && !requestError) return;
-    const timer = setTimeout(() => {
-      setNotice("");
-      setRequestError("");
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [notice, requestError]);
 
   async function handleSendCode() {
     const emailError = validateEmail(email);
     setErrors((current) => ({ ...current, email: emailError }));
-    setNotice("");
-    setRequestError("");
     if (emailError || !verification.canSend) return;
 
     try {
-      setCodeSentTo(email.trim());
-      setNotice("验证码已发送，请前往邮箱查看");
-    } catch (error) {
-      setRequestError(
-        error instanceof Error ? error.message : "验证码发送失败，请稍后重试",
+      await verification.send(() =>
+        requestLoginCodeMutation.mutateAsync(email.trim()),
       );
+      setCodeSentTo(email.trim());
+    } catch {
+      // 留给 hook 或全局提示处理
     }
   }
 
@@ -135,17 +126,15 @@ function EmailCodeLoginForm() {
     else if (codeSentTo !== email.trim())
       nextErrors.verifyCode = "邮箱已更改，请重新获取验证码";
     setErrors(nextErrors);
-    setRequestError("");
     if (Object.values(nextErrors).some(Boolean)) return;
 
     setSubmitting(true);
     try {
-      await authApi.loginWithEmailCode({ email: email.trim(), verifyCode });
+      await loginWithEmailCodeMutation.mutateAsync({
+        email: email.trim(),
+        verifyCode,
+      });
       navigate("/chat", { replace: true });
-    } catch (error) {
-      setRequestError(
-        error instanceof Error ? error.message : "邮箱或验证码错误",
-      );
     } finally {
       setSubmitting(false);
     }
@@ -153,8 +142,6 @@ function EmailCodeLoginForm() {
 
   return (
     <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
-      {notice && <StatusMessage type="info">{notice}</StatusMessage>}
-
       <FormField
         label="邮箱"
         type="email"
@@ -167,7 +154,6 @@ function EmailCodeLoginForm() {
           setEmail(event.target.value);
           setCodeSentTo("");
           setVerifyCode("");
-          setNotice("");
           verification.reset();
           setErrors((current) => ({ ...current, email: undefined }));
         }}
@@ -210,7 +196,7 @@ function EmailCodeLoginForm() {
         className={styles.primaryButton}
         type="primary"
         htmlType="submit"
-        loading={submitting}
+        loading={submitting || loginWithEmailCodeMutation.isPending}
         block
       >
         登录
