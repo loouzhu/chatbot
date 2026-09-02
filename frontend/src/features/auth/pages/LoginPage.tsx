@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   KeyOutlined,
   LockOutlined,
@@ -35,6 +35,20 @@ function PasswordLoginForm({ successMessage }: LoginFormProps) {
   const [errors, setErrors] = useState<FieldErrors<PasswordField>>({});
   const [requestError, setRequestError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [successNotice, setSuccessNotice] = useState(successMessage ?? "");
+
+  useEffect(() => {
+    setSuccessNotice(successMessage ?? "");
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (!successNotice && !requestError) return;
+    const timer = setTimeout(() => {
+      setSuccessNotice("");
+      setRequestError("");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [successNotice, requestError]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,8 +75,8 @@ function PasswordLoginForm({ successMessage }: LoginFormProps) {
 
   return (
     <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
-      {successMessage && (
-        <StatusMessage type="success">{successMessage}</StatusMessage>
+      {successNotice && (
+        <StatusMessage type="success">{successNotice}</StatusMessage>
       )}
       {requestError && (
         <StatusMessage type="error">{requestError}</StatusMessage>
@@ -121,6 +135,15 @@ function EmailCodeLoginForm({ successMessage }: LoginFormProps) {
   const [notice, setNotice] = useState("");
   const [requestError, setRequestError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!notice && !requestError) return;
+    const timer = setTimeout(() => {
+      setNotice("");
+      setRequestError("");
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [notice, requestError]);
 
   async function handleSendCode() {
     const emailError = validateEmail(email);
