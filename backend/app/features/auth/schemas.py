@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Literal
 
 from app.core.exceptions import ValidationException
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator

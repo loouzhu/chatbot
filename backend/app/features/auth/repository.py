@@ -1,6 +1,6 @@
 from typing import Optional
 
-from app.features.auth.models import User
+from app.features.auth.model import User
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 

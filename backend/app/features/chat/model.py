@@ -1,10 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from app.db.base import Base
-from app.features.auth.models import User
 from app.features.chat.constant import MessageRole
 from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+if TYPE_CHECKING:
+    from app.features.auth.model import User
 
 
 class Conversation(Base):

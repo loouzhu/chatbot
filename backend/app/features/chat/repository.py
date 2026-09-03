@@ -1,8 +1,10 @@
+import uuid
+
 from app.db.session import get_db
+from app.features.chat.constant import MessageRole
 from app.features.chat.model import Conversation, Message
-from app.features.chat.service import ChatService
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -39,6 +41,10 @@ class ChatRepository:
         return list(result.scalars().all())
 
 
-async def get_chat_service(db: AsyncSession = Depends(get_db)):
-    repository = ChatRepository(db)
-    return ChatService(repository)
+def to_db_message(content: str, conversation_id: str, role: MessageRole) -> Message:
+    return Message(
+        id=str(uuid.uuid4()),
+        content=content,
+        conversation_id=conversation_id,
+        role=role,
+    )

@@ -1,29 +1,28 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from app.core.exceptions import ValidationException
+from app.features.chat.constant import MessageRole
+from pydantic import BaseModel, Field, field_validator
 
-from backend.app.features.chat.constant import MessageRole
 
-
-class ChatRequest(BaseModel):
+# 输入消息模型
+class MessageRequest(BaseModel):
     conversation_id: str
-    content: str = Field(
-        min_length=1,
-        max_length=1000,
-    )
+    content: str = Field(min_length=1, max_length=1000)
+
+    @field_validator("content")
+    @classmethod
+    def content_must_not_be_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValidationException("消息内容不能为空", "EMPTY_CONTENT")
+        return value
 
 
-# 消息模型
-class ChatMessage(BaseModel):
+# 输出消息模型
+class MessageResponse(BaseModel):
     id: str
     role: MessageRole
     conversation_id: str
     content: str
     created_at: datetime
-
-
-#  单轮用户-AI对话模型
-class ChatResponse(BaseModel):
-    conversation_id: str
-    user_message: ChatMessage
-    assistant_message: ChatMessage
