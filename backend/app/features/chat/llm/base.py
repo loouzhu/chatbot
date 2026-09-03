@@ -1,14 +1,16 @@
 from typing import Protocol
 
 import httpx
+from app.features.chat.schema import MessageRole
 from pydantic import BaseModel
 
 
 class LLMMessage(BaseModel):
-    role: str
+    role: MessageRole
     content: str
 
 
+# 任何实现了chat类都能被视为LLM客户端
 class LLMClient(Protocol):
     async def chat(self, messages: list[LLMMessage]) -> str: ...
 
@@ -26,15 +28,13 @@ class LLMProvider:
         self.api_url = api_url
         self.error_cls = error_cls
 
-    async def chat(self, message: list[LLMMessage]) -> str:
+    async def chat(self, messages: list[LLMMessage]) -> str:
         if not self.api_key:
             raise self.error_cls("缺少APIKey")
 
-        content = message.content if hasattr(message, "content") else str(message)
-
         payload = {
             "model": self.model,
-            "messages": [{"role": "user", "content": content}],
+            "messages": messages,
             "temperature": 0.7,
         }
         headers = {
@@ -43,7 +43,7 @@ class LLMProvider:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=60) as client:
+            async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.post(
                     self.api_url,
                     json=payload,

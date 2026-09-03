@@ -1,17 +1,21 @@
 from datetime import datetime, timezone
 from typing import Optional
+from uuid import uuid4
 
 from app.db.base import Base
-from app.features.chat.model import Conversation
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from backend.app.features.chat.model import Conversation
 
 
 # 用户表
 class User(Base):
     __tablename__ = "user"
 
-    id: Mapped[String] = mapped_column(primary_key=True, index=True)
+    id: Mapped[str] = mapped_column(
+        String(64), default=lambda: str(uuid4()), primary_key=True, index=True
+    )
     email: Mapped[str] = mapped_column(
         String(255), unique=True, nullable=False, index=True
     )
@@ -46,8 +50,10 @@ class User(Base):
 class VerificationCode(Base):
     __tablename__ = "verification_codes"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[Optional[int]] = mapped_column(
+    id: Mapped[str] = mapped_column(
+        String(64), default=lambda: str(uuid4()), primary_key=True, index=True
+    )
+    user_id: Mapped[Optional[str]] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
@@ -72,8 +78,10 @@ class VerificationCode(Base):
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(
+    id: Mapped[str] = mapped_column(
+        String(64), default=lambda: str(uuid4()), primary_key=True, index=True
+    )
+    user_id: Mapped[str] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -98,8 +106,10 @@ class PasswordResetToken(Base):
 class Session(Base):
     __tablename__ = "sessions"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(
+    id: Mapped[str] = mapped_column(
+        String(64), default=lambda: str(uuid4()), primary_key=True, index=True
+    )
+    user_id: Mapped[str] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

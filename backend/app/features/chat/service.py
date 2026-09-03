@@ -18,7 +18,7 @@ class ChatService:
         new_content = message.strip()
 
         if not new_content:
-            raise ValidationException("发送内容不能为空", 400)
+            raise ValidationException("发送内容不能为空", "400")
         new_message = ChatMessage(
             id=str(uuid.uuid4()),
             content=new_content,
