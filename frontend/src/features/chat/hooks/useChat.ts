@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { TextAreaRef } from "antd/es/input/TextArea";
 import type { ChangeEvent, FormEvent } from "react";
 import type { ChatMessage } from "../types";
-import { sendChatMessage } from "../utils/chatApi";
+import { sendChatMessage } from "../api/chatApi";
 import { clearChatLog, loadChatLog, saveChatLog } from "../utils/chatStorage";
 
 export function useChat() {

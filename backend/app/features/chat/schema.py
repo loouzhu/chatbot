@@ -1,14 +1,8 @@
-import enum
 from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-
-class MessageRole(str, enum.Enum):
-    USER = "user"
-    ASSISTANT = "assistant"
-    SYSTEM = "system"
-    TOOL = "tool"
+from backend.app.features.chat.constant import MessageRole
 
 
 class ChatRequest(BaseModel):
@@ -20,7 +14,7 @@ class ChatRequest(BaseModel):
 
 
 # 消息模型
-class Message(BaseModel):
+class ChatMessage(BaseModel):
     id: str
     role: MessageRole
     conversation_id: str
@@ -31,5 +25,5 @@ class Message(BaseModel):
 #  单轮用户-AI对话模型
 class ChatResponse(BaseModel):
     conversation_id: str
-    user_message: Message
-    assistant_message: Message
+    user_message: ChatMessage
+    assistant_message: ChatMessage

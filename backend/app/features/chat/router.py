@@ -9,13 +9,16 @@ chat_service = Depends(get_chat_service)
 
 
 @chat_router.post("/send_message", response_model=ChatResponse)
-async def chat(
-    request: ChatRequest, service: ChatService = chat_service
+async def send_message(
+    request: ChatRequest,
+    service: ChatService = chat_service,
 ) -> ChatResponse:
     try:
-        response = await service.send_message(
-            request.content, request.conversation_id
+        response = await service.send_message(request.content, request.conversation_id)
+        return ChatResponse(
+            assistant_message=response.assistant_message,
+            user_message=response.user_message,
+            conversation_id=request.conversation_id,
         )
-        return ChatResponse(response=response, conversation_id=request.conversation_id)
     except DeepSeekError as exc:
         raise HTTPException(status_code=502, detail="AI服务暂不可用") from exc
