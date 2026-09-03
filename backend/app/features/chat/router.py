@@ -13,13 +13,9 @@ async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
     return ChatService(ChatRepository(db))
 
 
-chat_service = Depends(get_chat_service)
-
-
 @chat_router.post("/send_message", response_model=MessageResponse)
 async def send_message(
-    request: MessageRequest,
-    service: ChatService = chat_service,
+    request: MessageRequest, service: ChatService = Depends(get_chat_service)
 ) -> MessageResponse:
     try:
         response = await service.send_message(request.content, request.conversation_id)

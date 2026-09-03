@@ -26,3 +26,9 @@ class MessageResponse(BaseModel):
     conversation_id: str
     content: str
     created_at: datetime
+
+
+# 对话模型
+class ConversationResponse(BaseModel):
+    conversation_id: str
+    messages: list[MessageResponse]
