@@ -1,6 +1,8 @@
+from datetime import datetime
 from enum import Enum
 
 from app.core.exceptions import ValidationException
+from app.features.auth.model import User
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
@@ -75,3 +77,15 @@ class SendVerifyCodeRequest(BaseModel):
 class SendVerifyCodeResponse(BaseModel):
     message: str
     code: str = "SUCCESS"
+
+
+class TokenResponse(BaseModel):
+    id: str
+    token: str
+    created_at: datetime
+
+
+class ValidUserResponse(BaseModel):
+    user: User | None
+    message: str
+    code: str

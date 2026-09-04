@@ -16,6 +16,7 @@ from app.features.auth.schemas import (
     UsernameLoginResponse,
 )
 from app.integrations.email.client import EmailClient
+from fastapi import HTTPException
 from passlib.context import CryptContext
 
 
@@ -29,7 +30,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return pwd_context.verify(password, hashed_password)
 
 
-def generate_code(email: str, purpose: str = "register") -> str:
+async def generate_verify_code(email: str, purpose: str = "register") -> str:
     verify_code = str(random.randint(100000, 999999))
     code_key = verify_code_key("auth", purpose, email)
     limit_key = send_limit_key("auth", purpose, email)
@@ -37,14 +38,16 @@ def generate_code(email: str, purpose: str = "register") -> str:
     if redis_client.get(limit_key):
         raise AuthException("请稍后再试", "RATE_LIMITED")
 
-    redis_client.set(name=code_key, value=verify_code, ex=300, nx=True)
-    redis_client.set(name=limit_key, value="1", ex=60, nx=True)
+    await redis_client.set(name=code_key, value=verify_code, ex=300, nx=True)
+    await redis_client.set(name=limit_key, value="1", ex=60, nx=True)
     return verify_code
 
 
 async def send_verify_code(request: SendVerifyCodeRequest):
     try:
-        verify_code = generate_code(email=str(request.email), purpose=request.purpose)
+        verify_code = await generate_verify_code(
+            email=str(request.email), purpose=request.purpose
+        )
         email_client = EmailClient()
         res = await email_client.send_mail(
             email=str(request.email),
@@ -56,7 +59,7 @@ async def send_verify_code(request: SendVerifyCodeRequest):
             message="发送验证码成功",
             code="SUCCESS",
         )
-    except Exception:
+    except HTTPException:
         redis_client.delete(
             verify_code_key("auth", request.purpose, str(request.email))
         )
@@ -69,12 +72,12 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
         username = request.username
         email = str(request.email)
         password_hash = hash_code(request.password)
-        verify_code = redis_client.get(verify_code_key("auth", "register", email))
+        verify_code = await redis_client.get(verify_code_key("auth", "register", email))
 
-        if repository.get_user_by_email(request.email):
+        if await repository.get_user_by_email(request.email):
             raise AuthException("邮箱已被注册", "EMAIL_EXISTS")
 
-        if repository.get_user_by_username(request.username):
+        if await repository.get_user_by_username(request.username):
             raise AuthException("用户名已被占用", "USERNAME_EXISTS")
 
         if request.verify_code != str(verify_code):
@@ -85,7 +88,7 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
             username=username,
             password_hash=password_hash,
         )
-        db.commit()
+        await db.commit()
         redis_client.delete(verify_code_key("auth", "register", email))
         return RegisterResponse(
             message="注册成功",
@@ -130,7 +133,7 @@ async def username_login_user(
 ) -> UsernameLoginResponse:
     try:
         repository = AuthRepository(db)
-        user = repository.get_user_by_username(request.username)
+        user = await repository.get_user_by_username(request.username)
 
         if not user:
             raise AuthException("用户不存在", "USER_NOT_FOUND")

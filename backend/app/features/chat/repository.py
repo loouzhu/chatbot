@@ -1,9 +1,5 @@
-import uuid
-
 from app.db.session import get_db
-from app.features.chat.constant import MessageRole
 from app.features.chat.model import Conversation, Message
-from app.features.chat.schema import MessageResponse
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,22 +36,3 @@ class ChatRepository:
             .order_by(Message.created_at)
         )
         return list(result.scalars().all())
-
-
-def to_db_message(content: str, conversation_id: str, role: MessageRole) -> Message:
-    return Message(
-        id=str(uuid.uuid4()),
-        content=content,
-        conversation_id=conversation_id,
-        role=role,
-    )
-
-
-def to_message_response(message: Message) -> MessageResponse:
-    return MessageResponse(
-        id=message.id,
-        role=message.role,
-        conversation_id=message.conversation_id,
-        content=message.content,
-        created_at=message.created_at,
-    )

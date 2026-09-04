@@ -1,9 +1,9 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
 from app.db.base import Base
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=func.now(),
     )
 
     verification_codes: Mapped[list["VerificationCode"]] = relationship(
@@ -37,7 +37,7 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
-    sessions: Mapped[list["Session"]] = relationship(
+    token: Mapped[list["Token"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )
@@ -69,7 +69,7 @@ class VerificationCode(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=func.now(),
     )
 
     user: Mapped[Optional[User]] = relationship(back_populates="verification_codes")
@@ -97,15 +97,15 @@ class PasswordResetToken(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=func.now(),
     )
 
     user: Mapped[User] = relationship(back_populates="password_reset_tokens")
 
 
-# session表
-class Session(Base):
-    __tablename__ = "sessions"
+# token表
+class Token(Base):
+    __tablename__ = "Token"
 
     id: Mapped[str] = mapped_column(
         String(64), default=lambda: str(uuid4()), primary_key=True, index=True
@@ -120,7 +120,7 @@ class Session(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
     )
 
-    user: Mapped[User] = relationship(back_populates="sessions")
+    user: Mapped[User] = relationship(back_populates="token")
