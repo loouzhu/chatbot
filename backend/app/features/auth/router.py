@@ -2,13 +2,12 @@ from app.core.exceptions import AppException
 from app.db.session import get_db
 from app.features.auth.schemas import (
     EmailLoginRequest,
-    EmailLoginResponse,
+    LoginResponse,
     RegisterRequest,
     RegisterResponse,
     SendVerifyCodeRequest,
     SendVerifyCodeResponse,
     UsernameLoginRequest,
-    UsernameLoginResponse,
 )
 from app.features.auth.service import (
     email_login_user,
@@ -51,10 +50,10 @@ async def register(
         )
 
 
-@auth_router.post("/login/email", response_model=EmailLoginResponse)
+@auth_router.post("/login/email", response_model=LoginResponse)
 async def email_login(
     request: EmailLoginRequest, db: Session = Depends(get_db)
-) -> Response | EmailLoginResponse:
+) -> Response | LoginResponse:
     try:
         return await email_login_user(request, db)
     except AppException as exc:
@@ -66,11 +65,11 @@ async def email_login(
 
 @auth_router.post(
     "/login/username",
-    response_model=UsernameLoginResponse,
+    response_model=LoginResponse,
 )
 async def username_login(
     request: UsernameLoginRequest, db: Session = Depends(get_db)
-) -> Response | UsernameLoginResponse:
+) -> Response | LoginResponse:
     try:
         return await username_login_user(request, db)
     except AppException as exc:

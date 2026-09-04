@@ -47,7 +47,14 @@ class EmailLoginRequest(BaseModel):
     verify_code: str = Field(..., min_length=6, max_length=6)
 
 
-class EmailLoginResponse(BaseModel):
+class TokenResponse(BaseModel):
+    id: str
+    token: str
+    created_at: datetime
+
+
+class LoginResponse(BaseModel):
+    token: TokenResponse
     message: str
     code: str = "SUCCESS"
 
@@ -55,11 +62,6 @@ class EmailLoginResponse(BaseModel):
 class UsernameLoginRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=20)
     password: str = Field(..., min_length=6, max_length=64)
-
-
-class UsernameLoginResponse(BaseModel):
-    message: str
-    code: str = "SUCCESS"
 
 
 class Purpose(str, Enum):
@@ -77,12 +79,6 @@ class SendVerifyCodeRequest(BaseModel):
 class SendVerifyCodeResponse(BaseModel):
     message: str
     code: str = "SUCCESS"
-
-
-class TokenResponse(BaseModel):
-    id: str
-    token: str
-    created_at: datetime
 
 
 class ValidUserResponse(BaseModel):

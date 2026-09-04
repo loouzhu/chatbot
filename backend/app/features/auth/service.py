@@ -4,16 +4,15 @@ from app.cache.verify_code import send_limit_key, verify_code_key
 from app.core.exceptions import AppException
 from app.core.security import hash_code
 from app.db.redis import redis_client
-from app.features.auth.repository import AuthRepository
+from app.features.auth.repository import AuthRepository, TokenRepository
 from app.features.auth.schemas import (
     EmailLoginRequest,
-    EmailLoginResponse,
+    LoginResponse,
     RegisterRequest,
     RegisterResponse,
     SendVerifyCodeRequest,
     SendVerifyCodeResponse,
     UsernameLoginRequest,
-    UsernameLoginResponse,
 )
 from app.integrations.email.client import EmailClient
 from fastapi import HTTPException
@@ -88,8 +87,7 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
             username=username,
             password_hash=password_hash,
         )
-        await db.commit()
-        redis_client.delete(verify_code_key("auth", "register", email))
+        await redis_client.delete(verify_code_key("auth", "register", email))
         return RegisterResponse(
             message="注册成功",
             code="SUCCESS",
@@ -102,21 +100,23 @@ async def register_user(request: RegisterRequest, db) -> RegisterResponse:
         db.close()
 
 
-async def email_login_user(request: EmailLoginRequest, db) -> EmailLoginResponse:
+async def email_login_user(request: EmailLoginRequest, db) -> LoginResponse:
     try:
-        repository = AuthRepository(db)
+        user_repository = AuthRepository(db)
+        token_repository = TokenRepository(db)
+
         email = str(request.email)
         verify_code = redis_client.get(verify_code_key("auth", "login", email))
-        user = repository.get_user_by_email(email)
-
-        if not user:
-            raise AuthException("未注册的邮箱", "EMAIL_NOT_FOUND")
-
         if request.verify_code != str(verify_code):
             raise AuthException("验证码不正确", "INVALID_VERIFY_CODE")
-
         redis_client.delete(verify_code_key("auth", "login", email))
-        return EmailLoginResponse(
+
+        user = await user_repository.get_user_by_email(email)
+        if not user:
+            raise AuthException("未注册的邮箱", "EMAIL_NOT_FOUND")
+        token = await token_repository.create_token(user.id)
+        return LoginResponse(
+            token=token,
             message="登录成功",
             code="SUCCESS",
         )
@@ -125,23 +125,22 @@ async def email_login_user(request: EmailLoginRequest, db) -> EmailLoginResponse
             raise
         raise AuthException("邮箱登录失败", "EMAIL_LOGIN_FAILED")
     finally:
-        db.close()
+        await db.close()
 
 
-async def username_login_user(
-    request: UsernameLoginRequest, db
-) -> UsernameLoginResponse:
+async def username_login_user(request: UsernameLoginRequest, db) -> LoginResponse:
     try:
-        repository = AuthRepository(db)
-        user = await repository.get_user_by_username(request.username)
+        token_repository = TokenRepository(db)
+        user_repository = AuthRepository(db)
+        user = await user_repository.get_user_by_username(request.username)
 
-        if not user:
-            raise AuthException("用户不存在", "USER_NOT_FOUND")
-
-        if not verify_password(request.password, user.password_hash):
+        if not user or not verify_password(request.password, user.password_hash):
             raise AuthException("用户名或密码错误", "INVALID_PASSWORD")
 
-        return UsernameLoginResponse(
+        token = await token_repository.create_token(user.id)
+
+        return LoginResponse(
+            token=token,
             message="登录成功",
             code="SUCCESS",
         )
