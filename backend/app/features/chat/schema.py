@@ -30,5 +30,5 @@ class MessageResponse(BaseModel):
 
 # 对话模型
 class ConversationResponse(BaseModel):
-    conversation_id: str
+    id: str
     messages: list[MessageResponse]

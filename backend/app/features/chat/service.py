@@ -12,7 +12,7 @@ from app.features.chat.llm.base import LLMClient, LLMMessage
 from app.features.chat.llm.deepseek import DeepSeekProvider
 from app.features.chat.model import Conversation
 from app.features.chat.repository import to_db_message
-from app.features.chat.schema import MessageResponse
+from app.features.chat.schema import ConversationResponse, MessageResponse
 
 if TYPE_CHECKING:
     from app.features.chat.repository import ChatRepository
@@ -34,6 +34,8 @@ class ChatService:
         #     raise NotFoundException("未找到对话", "NOT_FOUND")
         # if conversation.user_id != user_id:
         #     raise UnauthorizedException("无权访问该对话", "UNAUTHORIZED")
+        # if not conversation_id:
+        #     self.start_new_chat(user_id=user_id)
         new_db_user_message = to_db_message(
             content=new_user_content,
             conversation_id=conversation_id,
@@ -60,13 +62,16 @@ class ChatService:
             created_at=new_db_ai_message.created_at,
         )
 
-    async def start_new_chat(self, user_id: str) -> Conversation:
+    async def start_new_chat(self, user_id: str) -> ConversationResponse:
         conversation = Conversation(
             id=str(uuid4()),
             user_id=user_id,
         )
         await self.repository.add_conversation(conversation)
-        return conversation
+        return ConversationResponse(
+            id=conversation.id,
+            messages=[],
+        )
 
 
 # async def transform_message(
