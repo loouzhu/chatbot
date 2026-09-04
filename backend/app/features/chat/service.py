@@ -1,13 +1,7 @@
 import uuid
-from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from app.core.exceptions import (
-    NotFoundException,
-    UnauthorizedException,
-    ValidationException,
-)
 from app.features.chat.constant import MessageRole
 from app.features.chat.llm.base import LLMClient, LLMMessage
 from app.features.chat.llm.deepseek import DeepSeekProvider
@@ -31,9 +25,9 @@ class ChatService:
     ) -> MessageResponse:
         # conversation = await self.repository.get_conversation_by_id(conversation_id)
         # if not conversation:
-        #     raise NotFoundException("未找到对话", "NOT_FOUND")
+        #     raise AppException("未找到对话", "NOT_FOUND")
         # if conversation.user_id != user_id:
-        #     raise UnauthorizedException("无权访问该对话", "UNAUTHORIZED")
+        #     raise AppException("无权访问该对话", "UNAUTHORIZED")
         # if not conversation_id:
         #     self.start_new_chat(user_id=user_id)
         new_db_user_message = to_db_message(
@@ -99,7 +93,7 @@ def to_message_response(message: Message) -> MessageResponse:
 #     new_content = message.strip()
 #     #  隐患：之后考虑用户强制要求AI返回为空的情况
 #     if not new_content:
-#         raise ValidationException("发送内容不能为空", "EMPTY_CONTENT")
+#         raise AppException("发送内容不能为空", "EMPTY_CONTENT")
 #     new_chat_message = ChatMessage(
 #         id=str(uuid4()),
 #         role=role,

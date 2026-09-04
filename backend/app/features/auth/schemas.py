@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from app.core.exceptions import ValidationException
+from app.core.exceptions import AuthException
 from app.features.auth.model import User
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
@@ -17,21 +17,21 @@ class RegisterRequest(BaseModel):
     @classmethod
     def validate_username(cls, v: str) -> str:
         if len(v) < 3 or len(v) > 20:
-            raise ValidationException("用户名长度应为3-20个字符")
+            raise AuthException("用户名长度应为3-20个字符", "INVALID_USERNAME")
         return v
 
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
         if len(v) < 6 or len(v) > 64:
-            raise ValidationException("密码长度应为6-64个字符")
+            raise AuthException("密码长度应为6-64个字符", "INVALID_PASSWORD")
         return v
 
     # 跨字段验证使用model_validator
     @model_validator(mode="after")
     def validate_confirm_password(self) -> "RegisterRequest":
         if self.password != self.confirm_password:
-            raise ValidationException("两次输入的密码不一致")
+            raise AuthException("两次输入的密码不一致", "PASSWORD_MISMATCH")
         return self
 
     model_config = {"validate_assignment": True}
@@ -85,3 +85,8 @@ class ValidUserResponse(BaseModel):
     user: User | None
     message: str
     code: str
+
+
+class LogoutResponse(BaseModel):
+    message: str
+    code: str = "SUCCESS"

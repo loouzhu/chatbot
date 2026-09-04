@@ -1,25 +1,21 @@
 class AppException(Exception):
-    def __init__(self, message: str, code: str = ""):
-        super().__init__(message)
+    def __init__(
+        self,
+        message: str,
+        code: str | None = None,
+        status_code: int = 500,
+    ):
         self.message = message
         self.code = code
+        self.status_code = status_code
+        super().__init__(message)
 
 
-# 未授权
-class UnauthorizedException(AppException):
-    pass
-
-
-# 禁止访问
-class ForbiddenException(AppException):
-    pass
-
-
-# 验证失败
-class ValidationException(AppException):
-    pass
-
-
-# 找不到内容
-class NotFoundException(AppException):
-    pass
+class AuthException(AppException):
+    def __init__(
+        self,
+        message: str,
+        code: str | None = "ERROR",
+        status_code: int = 400,
+    ):
+        super().__init__(message, code, status_code)

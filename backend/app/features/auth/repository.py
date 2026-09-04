@@ -24,6 +24,11 @@ class AuthRepository:
         user = await self.db.execute(query)
         return user.scalar_one_or_none()
 
+    async def get_user_by_user_id(self, user_id: str) -> Optional[User]:
+        query = select(User).where(User.id == user_id)
+        user = await self.db.execute(query)
+        return user.scalar_one_or_none()
+
     async def create_user(
         self, *, email: str, username: str, password_hash: str
     ) -> User:
@@ -62,6 +67,11 @@ class TokenRepository:
         return TokenResponse(
             id=db_token.id, token=token, created_at=db_token.created_at
         )
+
+    async def delete_tokens_by_user_id(self, user_id: str):
+        query = delete(Token).where(Token.user_id == user_id)
+        await self.db.execute(query)
+        await self.db.commit()
 
     # async def get_valid_token(
     #     self,

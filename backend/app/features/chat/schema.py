@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.core.exceptions import ValidationException
+from app.core.exceptions import AppException
 from app.features.chat.constant import MessageRole
 from pydantic import BaseModel, Field, field_validator
 
@@ -15,7 +15,7 @@ class MessageRequest(BaseModel):
     def content_must_not_be_blank(cls, value: str) -> str:
         value = value.strip()
         if not value:
-            raise ValidationException("消息内容不能为空", "EMPTY_CONTENT")
+            raise AppException("消息内容不能为空", "EMPTY_CONTENT")
         return value
 
 
