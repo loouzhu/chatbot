@@ -14,15 +14,28 @@ from app.features.auth.schemas import (
     SendVerifyCodeRequest,
     SendVerifyCodeResponse,
     UsernameLoginRequest,
+    UserResponse,
 )
 from app.integrations.email.client import EmailClient
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.app.features.auth.model import User
+
 
 def verify_password(password: str, hashed_password: str) -> bool:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.verify(password, hashed_password)
+
+
+def to_user_response(user: User) -> UserResponse:
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        username=user.username,
+        status=user.status,
+        created_at=user.created_at,
+    )
 
 
 async def generate_verify_code(email: str, purpose: str = "register") -> str:
@@ -101,7 +114,7 @@ async def email_login_user(
     token = await token_repository.create_token(user.id)
     return LoginResponse(
         token=token,
-        user=user,
+        user=to_user_response(user),
         message="登录成功",
         code="SUCCESS",
     )
@@ -121,7 +134,7 @@ async def username_login_user(
 
     return LoginResponse(
         token=token,
-        user=user,
+        user=to_user_response(user),
         message="登录成功",
         code="SUCCESS",
     )

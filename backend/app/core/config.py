@@ -1,10 +1,11 @@
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 # 该文件用于读取和校验环境变量
-load_dotenv()  # Load environment variables from .env file
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 
 @dataclass(frozen=True)

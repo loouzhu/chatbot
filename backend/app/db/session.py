@@ -4,7 +4,9 @@ from app.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 engine = create_async_engine(
-    settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
+    settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://").replace(
+        "mysql+pymysql://", "mysql+aiomysql://"
+    ),
     echo=True,  # 调试时可以开启SQL日志
     pool_pre_ping=True,  # 连接池健康检查
 )
