@@ -101,6 +101,7 @@ async def email_login_user(
     token = await token_repository.create_token(user.id)
     return LoginResponse(
         token=token,
+        user=user,
         message="登录成功",
         code="SUCCESS",
     )
@@ -120,6 +121,7 @@ async def username_login_user(
 
     return LoginResponse(
         token=token,
+        user=user,
         message="登录成功",
         code="SUCCESS",
     )

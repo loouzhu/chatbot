@@ -55,6 +55,7 @@ class TokenResponse(BaseModel):
 
 class LoginResponse(BaseModel):
     token: TokenResponse
+    user: User
     message: str
     code: str = "SUCCESS"
 
