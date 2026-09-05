@@ -1,5 +1,4 @@
 import type {
-  AuthSession,
   EmailCodeLoginInput,
   PasswordLoginInput,
   PasswordResetVerification,
@@ -41,49 +40,38 @@ async function request<T>(path: string, body: unknown): Promise<T> {
 }
 
 export const authApi = {
-  async loginWithPassword(input: PasswordLoginInput): Promise<AuthSession> {
-    const response = await request<{ username: string; message: string }>(
+  async loginWithPassword(input: PasswordLoginInput) {
+    return await request<{ username: string; message: string }>(
       "/auth/login/username",
       { username: input.username, password: input.password },
     );
-    return {
-      user: { id: response.username, email: "", username: response.username },
-      accessToken: "development-session",
-    };
   },
 
-  async loginWithEmailCode(input: EmailCodeLoginInput): Promise<AuthSession> {
-    const response = await request<{ email: string; message: string }>(
+  async loginWithEmailCode(input: EmailCodeLoginInput) {
+    return await request<{ email: string; message: string }>(
       "/auth/login/email",
       { email: input.email, verify_code: input.verifyCode },
     );
-    return {
-      user: { id: response.email, email: response.email, username: "" },
-      accessToken: "development-session",
-    };
   },
 
-  async requestLoginCode(email: string): Promise<VerificationChallenge> {
-    await request("/auth/verify_code", {
+  async requestLoginCode(email: string) {
+    return await request("/auth/verify_code", {
       email,
       username: email,
       purpose: "login",
     });
-    return { verificationId: `login:${email}`, expiresIn: 300 };
   },
 
-  async requestRegistrationCode(email: string): Promise<VerificationChallenge> {
-    await request("/auth/verify_code", {
+  async requestRegistrationCode(email: string) {
+    return await request("/auth/verify_code", {
       email,
       username: "user",
-      code: "",
       purpose: "register",
     });
-    return { verificationId: `register:${email}`, expiresIn: 300 };
   },
 
   async register(input: RegisterInput): Promise<void> {
-    return request<void>("/auth/register", {
+    return await request<void>("/auth/register", {
       email: input.email,
       username: input.username,
       password: input.password,
