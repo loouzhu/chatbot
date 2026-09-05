@@ -4,11 +4,13 @@ from app.cache.verify_code import send_limit_key, verify_code_key
 from app.core.exceptions import AppException
 from app.core.security import hash_code
 from app.db.redis import redis_client
+from app.features.auth.model import User
 from app.features.auth.repository import AuthRepository, TokenRepository
 from app.features.auth.schemas import (
     EmailLoginRequest,
     LoginResponse,
     LogoutResponse,
+    Purpose,
     RegisterRequest,
     RegisterResponse,
     SendVerifyCodeRequest,
@@ -19,8 +21,6 @@ from app.features.auth.schemas import (
 from app.integrations.email.client import EmailClient
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from backend.app.features.auth.model import User
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
@@ -39,14 +39,16 @@ def to_user_response(user: User) -> UserResponse:
 
 
 async def generate_verify_code(email: str, purpose: str = "register") -> str:
+    if isinstance(purpose, Purpose):
+        purpose = purpose.value
     verify_code = str(random.randint(100000, 999999))
     code_key = verify_code_key("auth", purpose, email)
     limit_key = send_limit_key("auth", purpose, email)
 
-    if redis_client.get(limit_key):
+    if await redis_client.get(limit_key):
         raise AppException("请稍后再试", "RATE_LIMITED", 400)
 
-    await redis_client.set(name=code_key, value=verify_code, ex=300, nx=True)
+    await redis_client.set(name=code_key, value=verify_code, ex=300)
     await redis_client.set(name=limit_key, value="1", ex=60, nx=True)
     return verify_code
 
@@ -103,10 +105,10 @@ async def email_login_user(
     token_repository = TokenRepository(db)
 
     email = str(request.email)
-    verify_code = redis_client.get(verify_code_key("auth", "login", email))
+    verify_code = await redis_client.get(verify_code_key("auth", "login", email))
     if request.verify_code != str(verify_code):
         raise AppException("验证码不正确", "INVALID_VERIFY_CODE", 400)
-    redis_client.delete(verify_code_key("auth", "login", email))
+    await redis_client.delete(verify_code_key("auth", "login", email))
 
     user = await user_repository.get_user_by_email(email)
     if not user:
