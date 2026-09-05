@@ -1,5 +1,4 @@
 from app.cache.verify_code import verify_code_key
-from app.core.exceptions import AppException
 from app.db.redis import redis_client
 from app.db.session import get_db
 from app.features.auth.schemas import (
@@ -38,11 +37,6 @@ async def verify_code(
             status_code=400,
             content={"message": "发送验证码失败", "code": "SEND_VERIFY_CODE_FAILED"},
         )
-    except AppException as exc:
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={"message": exc.message, "code": exc.code},
-        )
 
 
 @auth_router.post(
@@ -51,26 +45,14 @@ async def verify_code(
 async def register(
     request: RegisterRequest, db: AsyncSession = Depends(get_db)
 ) -> Response | RegisterResponse:
-    try:
-        return await register_user(request, db)
-    except AppException as exc:
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={"message": exc.message, "code": exc.code},
-        )
+    return await register_user(request, db)
 
 
 @auth_router.post("/login/email", response_model=LoginResponse)
 async def email_login(
     request: EmailLoginRequest, db: AsyncSession = Depends(get_db)
 ) -> Response | LoginResponse:
-    try:
-        return await email_login_user(request, db)
-    except AppException as exc:
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={"message": exc.message, "code": exc.code},
-        )
+    return await email_login_user(request, db)
 
 
 @auth_router.post(
@@ -80,10 +62,4 @@ async def email_login(
 async def username_login(
     request: UsernameLoginRequest, db: AsyncSession = Depends(get_db)
 ) -> Response | LoginResponse:
-    try:
-        return await username_login_user(request, db)
-    except AppException as exc:
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={"message": exc.message, "code": exc.code},
-        )
+    return await username_login_user(request, db)

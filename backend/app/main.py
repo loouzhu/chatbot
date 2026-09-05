@@ -1,8 +1,12 @@
+from asyncio.log import logger
+
 from app.core.config import settings
+from app.core.exceptions import AppException
 from app.features.auth.router import auth_router
 from app.features.chat.router import chat_router
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 
 # --- FastAPI App ---
@@ -19,6 +23,18 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=["*"],
     )
+
+    @app.exception_handler(AppException)
+    async def app_exception_handler(_request: Request, exception: AppException):
+        logger.error(f"AppException: {exception.message}", exc_info=True)
+        return JSONResponse(
+            status_code=exception.status_code,
+            content={
+                "message": exception.message,
+                "code": exception.code,
+                "status_code": exception.status_code,
+            },
+        )
 
     @app.get("/", tags=["Health"])
     async def health_check() -> dict[str, str]:

@@ -15,7 +15,7 @@ class MessageRequest(BaseModel):
     def content_must_not_be_blank(cls, value: str) -> str:
         value = value.strip()
         if not value:
-            raise AppException("消息内容不能为空", "EMPTY_CONTENT")
+            raise AppException("消息内容不能为空", "EMPTY_CONTENT", 400)
         return value
 
 

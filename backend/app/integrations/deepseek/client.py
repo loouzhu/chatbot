@@ -8,4 +8,4 @@ class DeepSeekError(Exception):
 
 # 作用是负责与DeepSeek通信
 class DeepSeekClient:
-    
+    pass
