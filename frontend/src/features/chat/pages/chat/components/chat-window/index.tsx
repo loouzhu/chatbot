@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import { Button } from "antd";
 import type { ChatMessage } from "@chat/types";
-import styles from "./ChatWindow.module.less";
+import styles from "./index.module.less";
 
 interface ChatWindowProps {
   chatLog: ChatMessage[];

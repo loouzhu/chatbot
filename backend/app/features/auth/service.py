@@ -30,7 +30,6 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 def to_user_response(user: User) -> UserResponse:
     return UserResponse(
-        id=user.id,
         email=user.email,
         username=user.username,
         status=user.status,
@@ -142,13 +141,9 @@ async def username_login_user(
     )
 
 
-async def logout_user(user_id: str, db: AsyncSession) -> LogoutResponse:
-    user_repository = AuthRepository(db)
+async def logout_user(user: User, db: AsyncSession) -> LogoutResponse:
     token_repository = TokenRepository(db)
-    user = await user_repository.get_user_by_user_id(user_id)
-    if not user:
-        raise AppException("未找到用户", "NOT_FOUND_USER", 404)
-    await token_repository.delete_tokens_by_user_id(user_id)
+    await token_repository.delete_tokens_by_user_id(user.id)
     return LogoutResponse(
         message="退出登录成功",
         code="SUCCESS",

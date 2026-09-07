@@ -1,4 +1,5 @@
 from app.db.session import get_db
+from app.features.auth.model import User
 from app.features.auth.schemas import (
     EmailLoginRequest,
     RegisterRequest,
@@ -14,6 +15,8 @@ from app.features.auth.service import (
 )
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.app.features.auth.dependence import get_current_user
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -41,5 +44,7 @@ async def username_login(
 
 
 @auth_router.post("/logout")
-async def logout(user_id: str, db: AsyncSession = Depends(get_db)):
-    return await logout_user(user_id=user_id, db=db)
+async def logout(
+    user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
+    return await logout_user(user=user, db=db)

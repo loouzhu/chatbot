@@ -2,45 +2,34 @@ const CHAT_API_URL =
   (import.meta.env.VITE_CHAT_API_URL as string | undefined) ??
   "http://101.37.70.188:8000/chat/send_message";
 
-interface ChatApiResponse {
-  response: string;
-}
-
-export async function sendChatMessage(userMessage: string): Promise<string> {
+// 发送信息
+export async function sendChatMessage(content: string): Promise<string> {
   const response = await fetch(CHAT_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_message: userMessage }),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({ content }),
   });
 
-  if (!response.ok) {
-    let errorDetail = `HTTP error! Status: ${response.status}`;
-    try {
-      const errorData: unknown = await response.json();
-      if (
-        typeof errorData === "object" &&
-        errorData !== null &&
-        "detail" in errorData &&
-        typeof errorData.detail === "string"
-      ) {
-        errorDetail = errorData.detail;
-      }
-    } catch {
-      errorDetail = `${errorDetail} ${response.statusText || ""}`.trim();
-    }
+  const data = await response.json();
 
-    throw new Error(errorDetail);
-  }
+  return data;
+}
 
-  const data: unknown = await response.json();
-  const botResponseText =
-    typeof data === "object" && data !== null && "response" in data
-      ? (data as Partial<ChatApiResponse>).response
-      : undefined;
+// 开始新对话
+export async function startNewChat(user_id: string): Promise<void> {
+  const response = await fetch(CHAT_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({ user_id }),
+  });
 
-  if (typeof botResponseText !== "string" || !botResponseText) {
-    throw new Error("Received invalid or empty response from bot.");
-  }
+  const data = await response.json();
 
-  return botResponseText;
+  return data;
 }

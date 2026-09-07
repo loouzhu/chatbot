@@ -20,7 +20,10 @@ export function useChat() {
   useEffect(() => {
     if (chatWindowRef.current) {
       const { scrollHeight, clientHeight } = chatWindowRef.current;
-      chatWindowRef.current.scrollTo({ top: scrollHeight - clientHeight, behavior: "smooth" });
+      chatWindowRef.current.scrollTo({
+        top: scrollHeight - clientHeight,
+        behavior: "smooth",
+      });
     }
 
     if (chatLog.length > 0) saveChatLog(chatLog);
@@ -30,11 +33,13 @@ export function useChat() {
     setUserInput(event.target.value);
   };
 
+  // 选择提示
   const handlePromptSelect = (prompt: string) => {
     setUserInput(prompt);
     window.requestAnimationFrame(() => inputRef.current?.focus());
   };
 
+  // 清空聊天
   const clearChat = () => {
     setChatLog([]);
     setUserInput("");
@@ -42,22 +47,35 @@ export function useChat() {
     window.requestAnimationFrame(() => inputRef.current?.focus());
   };
 
+  // 提交输入
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmedInput = userInput.trim();
     if (!trimmedInput || loading) return;
 
-    setChatLog((previous) => [...previous, { type: "user", text: trimmedInput }]);
+    setChatLog((previous) => [
+      ...previous,
+      { type: "user", text: trimmedInput },
+    ]);
     setUserInput("");
     setLoading(true);
 
     try {
       const botResponseText = await sendChatMessage(trimmedInput);
-      setChatLog((previous) => [...previous, { type: "bot", text: botResponseText }]);
+      setChatLog((previous) => [
+        ...previous,
+        { type: "bot", text: botResponseText },
+      ]);
     } catch (error) {
       console.error("Error fetching chat response:", error);
-      const errorMessage = error instanceof Error ? error.message : "暂时无法连接到 AI 助手，请稍后重试。";
-      setChatLog((previous) => [...previous, { type: "error", text: errorMessage }]);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "暂时无法连接到 AI 助手，请稍后重试。";
+      setChatLog((previous) => [
+        ...previous,
+        { type: "error", text: errorMessage },
+      ]);
     } finally {
       setLoading(false);
       inputRef.current?.focus();

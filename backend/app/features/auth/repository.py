@@ -29,6 +29,18 @@ class AuthRepository:
         user = await self.db.execute(query)
         return user.scalar_one_or_none()
 
+    async def get_user_by_token(self, token: str) -> Optional[User]:
+        query = (
+            select(User)
+            .join(Token, Token.user_id == User.id)
+            .where(
+                Token.token_hash == hash_token(token),
+                Token.expire_at > datetime.now(timezone.utc),
+            )
+        )
+        user = await self.db.execute(query)
+        return user.scalar_one_or_none()
+
     async def create_user(
         self, *, email: str, username: str, password_hash: str
     ) -> User:

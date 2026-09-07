@@ -1,4 +1,6 @@
 from app.db.session import get_db
+from backend.app.features.auth.dependence import get_current_user
+from app.features.auth.model import User
 from app.features.chat.llm.deepseek import DeepSeekError
 from app.features.chat.repository import ChatRepository
 from app.features.chat.schema import (
@@ -19,17 +21,22 @@ async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
 
 @chat_router.post("/start_new_chat", response_model=ConversationResponse)
 async def start_new_chat(
-    user_id: str, service: ChatService = Depends(get_chat_service)
+    user: User = Depends(get_current_user),
+    service: ChatService = Depends(get_chat_service),
 ) -> ConversationResponse:
-    return await service.start_new_chat(user_id=user_id)
+    return await service.start_new_chat(user_id=user.id)
 
 
 @chat_router.post("/send_message", response_model=MessageResponse)
 async def send_message(
-    request: MessageRequest, service: ChatService = Depends(get_chat_service)
+    request: MessageRequest,
+    user: User = Depends(get_current_user),
+    service: ChatService = Depends(get_chat_service),
 ) -> MessageResponse:
     try:
-        response = await service.send_message(request.content, request.conversation_id)
+        response = await service.send_message(
+            request.content, request.conversation_id, user.id
+        )
         return response
     except DeepSeekError as exc:
         raise HTTPException(status_code=502, detail="AI服务暂不可用") from exc

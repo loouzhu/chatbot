@@ -2,6 +2,7 @@ import uuid
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
+from app.core.exceptions import AppException
 from app.features.chat.constant import MessageRole
 from app.features.chat.llm.base import LLMClient, LLMMessage
 from app.features.chat.llm.deepseek import DeepSeekProvider
@@ -21,13 +22,13 @@ class ChatService:
         self,
         new_user_content: str,
         conversation_id: str,
-        # user_id: str
+        user_id: str,
     ) -> MessageResponse:
-        # conversation = await self.repository.get_conversation_by_id(conversation_id)
-        # if not conversation:
-        #     raise AppException("未找到对话", "NOT_FOUND")
-        # if conversation.user_id != user_id:
-        #     raise AppException("无权访问该对话", "UNAUTHORIZED")
+        conversation = await self.repository.get_conversation_by_id(conversation_id)
+        if not conversation:
+            raise AppException("未找到对话", "NOT_FOUND", 404)
+        if conversation.user_id != user_id:
+            raise AppException("无权访问该对话", "UNAUTHORIZED", 403)
         # if not conversation_id:
         #     self.start_new_chat(user_id=user_id)
         new_db_user_message = to_db_message(

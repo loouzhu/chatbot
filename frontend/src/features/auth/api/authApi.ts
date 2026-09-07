@@ -40,6 +40,7 @@ async function request<T>(path: string, body: unknown): Promise<T> {
 }
 
 export const authApi = {
+  // 账密登录
   async loginWithPassword(input: PasswordLoginInput) {
     return await request<{ username: string; message: string }>(
       "/auth/login/username",
@@ -47,6 +48,7 @@ export const authApi = {
     );
   },
 
+  // 验证码登录
   async loginWithEmailCode(input: EmailCodeLoginInput) {
     return await request<{ email: string; message: string }>(
       "/auth/login/email",
@@ -54,6 +56,7 @@ export const authApi = {
     );
   },
 
+  // 发送登录验证码
   async requestLoginCode(email: string) {
     return await request("/auth/verify_code", {
       email,
@@ -62,6 +65,7 @@ export const authApi = {
     });
   },
 
+  // 发送注册验证码
   async requestRegistrationCode(email: string) {
     return await request("/auth/verify_code", {
       email,
@@ -70,6 +74,7 @@ export const authApi = {
     });
   },
 
+  // 注册
   async register(input: RegisterInput): Promise<void> {
     return await request<void>("/auth/register", {
       email: input.email,
@@ -80,6 +85,7 @@ export const authApi = {
     });
   },
 
+  // 密码重置
   async requestPasswordReset(
     email: string,
     username: string,
@@ -90,6 +96,7 @@ export const authApi = {
     });
   },
 
+  // 验证密码重置
   async verifyPasswordReset(
     verificationId: string,
     emailCode: string,
@@ -100,6 +107,7 @@ export const authApi = {
     });
   },
 
+  // 重置密码
   async resetPassword(input: ResetPasswordInput): Promise<void> {
     return request<void>("/auth/password-reset/complete", input);
   },

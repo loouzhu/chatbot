@@ -2,7 +2,7 @@ import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { ArrowUpOutlined, PaperClipOutlined } from "@ant-design/icons";
 import { Button, Input } from "antd";
 import type { TextAreaRef } from "antd/es/input/TextArea";
-import styles from "./ChatInput.module.less";
+import styles from "./index.module.less";
 
 interface ChatInputProps {
   userInput: string;
@@ -12,9 +12,19 @@ interface ChatInputProps {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
 
-export function ChatInput({ userInput, loading, inputRef, onInputChange, onSubmit }: ChatInputProps) {
+export function ChatInput({
+  userInput,
+  loading,
+  inputRef,
+  onInputChange,
+  onSubmit,
+}: ChatInputProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey &&
+      !event.nativeEvent.isComposing
+    ) {
       event.preventDefault();
       event.currentTarget.form?.requestSubmit();
     }
@@ -43,7 +53,9 @@ export function ChatInput({ userInput, loading, inputRef, onInputChange, onSubmi
             aria-label="添加附件（即将支持）"
             title="添加附件（即将支持）"
           />
-          <span className={styles.inputHint}>Enter 发送 · Shift + Enter 换行</span>
+          <span className={styles.inputHint}>
+            Enter 发送 · Shift + Enter 换行
+          </span>
           <Button
             className={styles.sendButton}
             type="primary"

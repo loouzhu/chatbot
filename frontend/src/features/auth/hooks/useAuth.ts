@@ -29,7 +29,8 @@ export const useLoginWithPassword = () => {
   const messageApi = useMessageApi();
   return useMutation({
     mutationFn: (input: PasswordLoginInput) => authApi.loginWithPassword(input),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log(data);
       messageApi.success("登录成功");
       navigate("/chat", { replace: true });
     },
