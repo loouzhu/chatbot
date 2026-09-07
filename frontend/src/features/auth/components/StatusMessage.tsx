@@ -1,5 +1,5 @@
 import { Alert } from "antd";
-import styles from "../styles/Auth.module.less";
+import styles from "../styles/index.module.less";
 
 interface StatusMessageProps {
   type: "success" | "error" | "info";
@@ -7,5 +7,12 @@ interface StatusMessageProps {
 }
 
 export function StatusMessage({ type, children }: StatusMessageProps) {
-  return <Alert className={styles.statusMessage} type={type} message={children} showIcon />;
+  return (
+    <Alert
+      className={styles.statusMessage}
+      type={type}
+      message={children}
+      showIcon
+    />
+  );
 }

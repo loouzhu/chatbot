@@ -1,13 +1,18 @@
 import { useState, type FormEvent } from "react";
-import { ArrowLeftOutlined, CheckOutlined, LockOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  CheckOutlined,
+  LockOutlined,
+} from "@ant-design/icons";
 import { Button } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { authApi } from "../api/authApi";
-import { AuthLayout } from "../components/AuthLayout";
-import { FormField } from "../components/FormField";
-import { StatusMessage } from "../components/StatusMessage";
-import { validatePassword, type FieldErrors } from "../utils/validation";
-import styles from "../styles/Auth.module.less";
+import { authApi } from "../../api/authApi";
+import { AuthLayout } from "../../components/AuthLayout";
+import { FormField } from "../../components/FormField";
+import { StatusMessage } from "../../components/StatusMessage";
+import { validatePassword, type FieldErrors } from "../../utils/validation";
+import sharedStyles from "../../styles/index.module.less";
+import styles from "./index.module.less";
 
 type ResetField = "password" | "confirmPassword";
 
@@ -32,7 +37,8 @@ export function ResetPasswordPage() {
       password: validatePassword(password),
     };
     if (!confirmPassword) nextErrors.confirmPassword = "请再次输入新密码";
-    else if (password !== confirmPassword) nextErrors.confirmPassword = "两次输入的密码不一致";
+    else if (password !== confirmPassword)
+      nextErrors.confirmPassword = "两次输入的密码不一致";
     setErrors(nextErrors);
     setRequestError("");
     if (Object.values(nextErrors).some(Boolean) || !resetToken) return;
@@ -57,7 +63,7 @@ export function ResetPasswordPage() {
         compact
       >
         <Link to="/auth/forgot-password">
-          <Button className={styles.primaryButton} type="primary" block>
+          <Button className={sharedStyles.primaryButton} type="primary" block>
             重新验证
           </Button>
         </Link>
@@ -79,7 +85,7 @@ export function ResetPasswordPage() {
           </span>
           <p>为了账号安全，其他设备上的登录状态可能需要重新验证。</p>
           <Button
-            className={styles.primaryButton}
+            className={sharedStyles.primaryButton}
             type="primary"
             onClick={() => navigate("/auth/login", { replace: true })}
             block
@@ -103,8 +109,14 @@ export function ResetPasswordPage() {
         </Link>
       }
     >
-      <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
-        {requestError && <StatusMessage type="error">{requestError}</StatusMessage>}
+      <form
+        className={sharedStyles.authForm}
+        onSubmit={handleSubmit}
+        noValidate
+      >
+        {requestError && (
+          <StatusMessage type="error">{requestError}</StatusMessage>
+        )}
         <FormField
           label="新密码"
           type="password"
@@ -128,11 +140,14 @@ export function ResetPasswordPage() {
           error={errors.confirmPassword}
           onChange={(event) => {
             setConfirmPassword(event.target.value);
-            setErrors((current) => ({ ...current, confirmPassword: undefined }));
+            setErrors((current) => ({
+              ...current,
+              confirmPassword: undefined,
+            }));
           }}
         />
         <Button
-          className={styles.primaryButton}
+          className={sharedStyles.primaryButton}
           type="primary"
           htmlType="submit"
           loading={submitting}

@@ -1,6 +1,6 @@
 import { useId, type ReactNode } from "react";
 import { Input, type InputProps } from "antd";
-import styles from "../styles/Auth.module.less";
+import styles from "../styles/index.module.less";
 
 interface FormFieldProps extends Omit<InputProps, "prefix" | "suffix"> {
   label: string;
@@ -22,7 +22,11 @@ export function FormField({
 }: FormFieldProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
-  const describedBy = error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined;
+  const describedBy = error
+    ? `${inputId}-error`
+    : hint
+      ? `${inputId}-hint`
+      : undefined;
   const sharedProps: InputProps = {
     ...inputProps,
     id: inputId,

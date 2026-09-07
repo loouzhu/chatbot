@@ -11,10 +11,10 @@ import {
 } from "@ant-design/icons";
 import { Avatar, Button } from "antd";
 import { Link } from "react-router-dom";
-import { useChat } from "../hooks/useChat";
+import { useChat } from "../../../../hooks/useChat";
 import styles from "./ChatPanel.module.less";
-import { ChatWindow } from "./ChatWindow";
-import { ChatInput } from "./ChatInput";
+import { ChatWindow } from "@chat/pages/chatWindow";
+import { ChatInput } from "../chatInput";
 
 export function ChatPanel() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

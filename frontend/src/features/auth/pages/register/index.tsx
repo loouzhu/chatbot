@@ -7,19 +7,21 @@ import {
 } from "@ant-design/icons";
 import { Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { authApi } from "../api/authApi";
-import { AuthLayout } from "../components/AuthLayout";
-import { FormField } from "../components/FormField";
-import { StatusMessage } from "../components/StatusMessage";
-import { useVerificationCode } from "../hooks/useVerificationCode";
+import { useMessageApi } from "../../../../app/context";
+import { authApi } from "../../api/authApi";
+import { AuthLayout } from "../../components/AuthLayout";
+import { FormField } from "../../components/FormField";
+import { StatusMessage } from "../../components/StatusMessage";
+import { useVerificationCode } from "../../hooks/useVerificationCode";
 import {
   validateEmail,
   validateEmailCode,
   validatePassword,
   validateUsername,
   type FieldErrors,
-} from "../utils/validation";
-import styles from "../styles/Auth.module.less";
+} from "../../utils/validation";
+import sharedStyles from "../../styles/index.module.less";
+import styles from "./index.module.less";
 
 type RegisterField =
   | "email"
@@ -30,6 +32,7 @@ type RegisterField =
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const messageApi = useMessageApi();
   const verification = useVerificationCode();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -37,7 +40,6 @@ export function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailCode, setEmailCode] = useState("");
   const [errors, setErrors] = useState<FieldErrors<RegisterField>>({});
-  const [notice, setNotice] = useState("");
   const [requestError, setRequestError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -51,7 +53,7 @@ export function RegisterPage() {
       await verification.send(() =>
         authApi.requestRegistrationCode(email.trim()),
       );
-      setNotice("验证码已发送，请前往邮箱查看");
+      messageApi.info("验证码已发送，请前往邮箱查看");
     } catch (error) {
       setRequestError(
         error instanceof Error ? error.message : "验证码发送失败",
@@ -116,11 +118,14 @@ export function RegisterPage() {
         </p>
       }
     >
-      <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
+      <form
+        className={sharedStyles.authForm}
+        onSubmit={handleSubmit}
+        noValidate
+      >
         {requestError && (
           <StatusMessage type="error">{requestError}</StatusMessage>
         )}
-        {notice && <StatusMessage type="info">{notice}</StatusMessage>}
 
         <FormField
           label="邮箱地址"
@@ -187,7 +192,7 @@ export function RegisterPage() {
           }}
           trailing={
             <Button
-              className={styles.codeButton}
+              className={sharedStyles.codeButton}
               onClick={handleSendCode}
               disabled={!verification.canSend}
               size="small"
@@ -202,7 +207,7 @@ export function RegisterPage() {
         />
 
         <Button
-          className={styles.primaryButton}
+          className={sharedStyles.primaryButton}
           type="primary"
           htmlType="submit"
           loading={submitting}

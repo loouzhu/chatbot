@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import styles from "../styles/Auth.module.less";
+import styles from "../styles/index.module.less";
 
 interface AuthLayoutProps {
   eyebrow: string;

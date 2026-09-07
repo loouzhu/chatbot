@@ -7,29 +7,30 @@ import {
 } from "@ant-design/icons";
 import { Button } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { authApi } from "../api/authApi";
-import { AuthLayout } from "../components/AuthLayout";
-import { FormField } from "../components/FormField";
-import { StatusMessage } from "../components/StatusMessage";
-import { useVerificationCode } from "../hooks/useVerificationCode";
+import { useMessageApi } from "../../../../app/context";
+import { authApi } from "../../api/authApi";
+import { AuthLayout } from "../../components/AuthLayout";
+import { FormField } from "../../components/FormField";
+import { StatusMessage } from "../../components/StatusMessage";
+import { useVerificationCode } from "../../hooks/useVerificationCode";
 import {
   validateEmail,
   validateEmailCode,
   validateUsername,
   type FieldErrors,
-} from "../utils/validation";
-import styles from "../styles/Auth.module.less";
+} from "../../utils/validation";
+import styles from "../../styles/index.module.less";
 
 type ForgotField = "email" | "username" | "emailCode";
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
+  const messageApi = useMessageApi();
   const verification = useVerificationCode();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [emailCode, setEmailCode] = useState("");
   const [errors, setErrors] = useState<FieldErrors<ForgotField>>({});
-  const [notice, setNotice] = useState("");
   const [requestError, setRequestError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -51,7 +52,7 @@ export function ForgotPasswordPage() {
       //const challenge = await verification.send(() =>
       //  authApi.requestPasswordReset(email.trim(), username.trim()),
       //);
-      setNotice("如果账号信息匹配，验证码将发送到你的邮箱");
+      messageApi.info("如果账号信息匹配，验证码将发送到你的邮箱");
     } catch (error) {
       setRequestError(
         error instanceof Error ? error.message : "验证码发送失败",
@@ -106,7 +107,6 @@ export function ForgotPasswordPage() {
         {requestError && (
           <StatusMessage type="error">{requestError}</StatusMessage>
         )}
-        {notice && <StatusMessage type="info">{notice}</StatusMessage>}
 
         <FormField
           label="注册邮箱"

@@ -185,23 +185,6 @@
   line-height: 1.5;
 }
 
-.loginMethodTabs {
-  width: 100%;
-  margin-bottom: 14px;
-  padding: 4px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  background: #f4f7fa;
-}
-
-.loginMethodTabs :global(.ant-segmented-item-label) {
-  min-height: 36px;
-  padding: 0 10px;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 36px;
-}
-
 .authForm {
   display: flex;
   flex-direction: column;
@@ -232,7 +215,8 @@
   color: #8b9bb3;
 }
 
-.formControl:global(.ant-input-affix-wrapper-focused) :global(.ant-input-prefix) {
+.formControl:global(.ant-input-affix-wrapper-focused)
+  :global(.ant-input-prefix) {
   color: #3477df;
 }
 
@@ -316,21 +300,6 @@
   cursor: not-allowed;
 }
 
-.formMeta {
-  display: flex;
-  min-height: 17px;
-  margin-top: -2px;
-  align-items: center;
-  justify-content: flex-end;
-  color: #6f7f96;
-  font-size: 13px;
-}
-
-.formMetaPlaceholder {
-  visibility: hidden;
-}
-
-.formMeta a,
 .cardFooter a,
 .backLink {
   color: #2f72dd;
@@ -338,7 +307,6 @@
   text-decoration: none;
 }
 
-.formMeta a:hover,
 .cardFooter a:hover,
 .backLink:hover {
   text-decoration: underline;
@@ -387,13 +355,6 @@
   height: 17px;
 }
 
-.terms {
-  margin: -2px 0 0;
-  color: #9aa7ba;
-  font-size: 11px;
-  text-align: center;
-}
-
 .pageFooter {
   position: absolute;
   bottom: 12px;
@@ -401,32 +362,6 @@
   color: #9aaac0;
   font-size: 12px;
   letter-spacing: 0.3px;
-}
-
-.successPanel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  text-align: center;
-}
-
-.successPanel p {
-  margin: 0;
-  color: #71809a;
-  font-size: 13px;
-  line-height: 1.65;
-}
-
-.successIcon {
-  display: grid;
-  width: 58px;
-  height: 58px;
-  place-items: center;
-  border-radius: 50%;
-  color: #fff;
-  background: linear-gradient(145deg, #56c58a, #32a76a);
-  box-shadow: 0 10px 25px rgba(50, 167, 106, 0.2);
 }
 
 .successIcon svg {

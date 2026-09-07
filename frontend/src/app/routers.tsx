@@ -1,8 +1,8 @@
-import { ChatPanel } from "@chat/components/ChatPanel";
-import { ForgotPasswordPage } from "@auth/pages/ForgotPasswordPage";
-import { LoginPage } from "@auth/pages/LoginPage";
-import { RegisterPage } from "@auth/pages/RegisterPage";
-import { ResetPasswordPage } from "@auth/pages/ResetPasswordPage";
+import { ChatPanel } from "@/features/chat/pages/chatWindow/components/chatPanel";
+import { ForgotPasswordPage } from "@auth/pages/forgot-password";
+import { LoginPage } from "@auth/pages/login";
+import { RegisterPage } from "@auth/pages/register";
+import { ResetPasswordPage } from "@auth/pages/reset-password";
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 export const router = createBrowserRouter([

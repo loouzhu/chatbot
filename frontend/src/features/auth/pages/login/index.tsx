@@ -7,21 +7,22 @@ import {
 } from "@ant-design/icons";
 import { Button, Segmented } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { AuthLayout } from "../components/AuthLayout";
-import { FormField } from "../components/FormField";
+import { AuthLayout } from "../../components/AuthLayout";
+import { FormField } from "../../components/FormField";
 import {
   useLoginWithEmailCode,
   useLoginWithPassword,
   useRequestLoginCode,
-} from "../hooks/useAuth";
-import { useVerificationCode } from "../hooks/useVerificationCode";
+} from "../../hooks/useAuth";
+import { useVerificationCode } from "../../hooks/useVerificationCode";
 import {
   validateEmail,
   validateEmailCode,
   validateUsername,
   type FieldErrors,
-} from "../utils/validation";
-import styles from "../styles/Auth.module.less";
+} from "../../utils/validation";
+import sharedStyles from "../../styles/index.module.less";
+import styles from "./index.module.less";
 
 type LoginMode = "password" | "emailCode";
 type PasswordField = "username" | "password";
@@ -45,8 +46,7 @@ function PasswordLoginForm() {
   }
 
   return (
-    <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
-
+    <form className={sharedStyles.authForm} onSubmit={handleSubmit} noValidate>
       <FormField
         label="账号"
         icon={<UserOutlined />}
@@ -78,7 +78,7 @@ function PasswordLoginForm() {
       </div>
 
       <Button
-        className={styles.primaryButton}
+        className={sharedStyles.primaryButton}
         type="primary"
         htmlType="submit"
         block
@@ -141,7 +141,7 @@ function EmailCodeLoginForm() {
   }
 
   return (
-    <form className={styles.authForm} onSubmit={handleSubmit} noValidate>
+    <form className={sharedStyles.authForm} onSubmit={handleSubmit} noValidate>
       <FormField
         label="邮箱"
         type="email"
@@ -173,7 +173,7 @@ function EmailCodeLoginForm() {
         }}
         trailing={
           <Button
-            className={styles.codeButton}
+            className={sharedStyles.codeButton}
             onClick={() => void handleSendCode()}
             disabled={!verification.canSend}
             size="small"
@@ -193,7 +193,7 @@ function EmailCodeLoginForm() {
       />
 
       <Button
-        className={styles.primaryButton}
+        className={sharedStyles.primaryButton}
         type="primary"
         htmlType="submit"
         loading={submitting || loginWithEmailCodeMutation.isPending}
@@ -232,11 +232,7 @@ export function LoginPage() {
         onChange={setMode}
       />
 
-      {mode === "password" ? (
-        <PasswordLoginForm />
-      ) : (
-        <EmailCodeLoginForm />
-      )}
+      {mode === "password" ? <PasswordLoginForm /> : <EmailCodeLoginForm />}
     </AuthLayout>
   );
 }
