@@ -41,3 +41,22 @@ export interface ResetPasswordInput {
   resetToken: string;
   newPassword: string;
 }
+
+export interface TokenResponse {
+  id: string;
+  token: string;
+  created_at: string;
+}
+
+export interface UserInfo {
+  email: string;
+  username: string;
+  status: string;
+  created_at: string;
+}
+export interface LoginResponse {
+  code: string;
+  message: string;
+  token: TokenResponse;
+  user: UserInfo;
+}

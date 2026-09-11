@@ -1,13 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
-import { useMessageApi } from "../../../app/context";
+import { useMessageApi } from "@/app/context";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
 import type {
   EmailCodeLoginInput,
   PasswordLoginInput,
-  PasswordResetVerification,
   RegisterInput,
   ResetPasswordInput,
+  LoginResponse,
 } from "../types";
 
 class AuthApiError extends Error {
@@ -29,8 +29,9 @@ export const useLoginWithPassword = () => {
   const messageApi = useMessageApi();
   return useMutation({
     mutationFn: (input: PasswordLoginInput) => authApi.loginWithPassword(input),
-    onSuccess: (data) => {
+    onSuccess: (data: LoginResponse) => {
       console.log(data);
+      localStorage.setItem("token", data.token.token);
       messageApi.success("登录成功");
       navigate("/chat", { replace: true });
     },
@@ -148,4 +149,15 @@ export const useResetPassword = () => {
   });
 };
 
-export type { PasswordResetVerification };
+export const useLougout = () => {
+  const messageApi = useMessageApi();
+  return useMutation({
+    mutationFn: () => authApi.logout(),
+    onSuccess: () => {
+      messageApi.success("退出登陆成功");
+    },
+    onError: (error: Error) => {
+      messageApi.error(getErrorMessage(error));
+    },
+  });
+};

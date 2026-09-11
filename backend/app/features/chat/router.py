@@ -1,5 +1,4 @@
 from app.db.session import get_db
-from backend.app.features.auth.dependence import get_current_user
 from app.features.auth.model import User
 from app.features.chat.llm.deepseek import DeepSeekError
 from app.features.chat.repository import ChatRepository
@@ -11,6 +10,8 @@ from app.features.chat.schema import (
 from app.features.chat.service import ChatService
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.app.features.auth.dependence import get_current_user
 
 chat_router = APIRouter(prefix="/chat", tags=["Chat"])
 

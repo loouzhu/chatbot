@@ -1,4 +1,4 @@
-import { ChatPanel } from "@/features/chat/pages/chat";
+import { ChatPanel } from "@/features/chat/pages";
 import { ForgotPasswordPage } from "@auth/pages/forgot-password";
 import { LoginPage } from "@auth/pages/login";
 import { RegisterPage } from "@auth/pages/register";
