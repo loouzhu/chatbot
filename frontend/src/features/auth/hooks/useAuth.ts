@@ -9,20 +9,7 @@ import type {
   ResetPasswordInput,
   LoginResponse,
 } from "../types";
-
-class AuthApiError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "AuthApiError";
-  }
-}
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof AuthApiError || error instanceof Error) {
-    return error.message;
-  }
-  return "请求失败，请稍后重试";
-}
+import { getErrorMessage } from "@/features/shared/utils/request";
 
 export const useLoginWithPassword = () => {
   const navigate = useNavigate();
@@ -48,8 +35,9 @@ export const useLoginWithEmailCode = () => {
   return useMutation({
     mutationFn: (input: EmailCodeLoginInput) =>
       authApi.loginWithEmailCode(input),
-    onSuccess: () => {
+    onSuccess: (data: LoginResponse) => {
       messageApi.success("登录成功");
+      localStorage.setItem("token", data.token.token);
       navigate("/chat", { replace: true });
     },
     onError: (error: unknown) => {
@@ -149,12 +137,15 @@ export const useResetPassword = () => {
   });
 };
 
-export const useLougout = () => {
+export const useLogout = () => {
+  const navigate = useNavigate();
   const messageApi = useMessageApi();
   return useMutation({
     mutationFn: () => authApi.logout(),
     onSuccess: () => {
-      messageApi.success("退出登陆成功");
+      window.localStorage.removeItem("token");
+      messageApi.success("退出登录成功");
+      navigate("/auth/login", { replace: true });
     },
     onError: (error: Error) => {
       messageApi.error(getErrorMessage(error));

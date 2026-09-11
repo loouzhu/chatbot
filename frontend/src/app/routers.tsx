@@ -1,4 +1,5 @@
 import { ChatPanel } from "@/features/chat/pages";
+import { RequireAuth } from "./components/RequireAuth";
 import { ForgotPasswordPage } from "@auth/pages/forgot-password";
 import { LoginPage } from "@auth/pages/login";
 import { RegisterPage } from "@auth/pages/register";
@@ -32,7 +33,19 @@ export const router = createBrowserRouter([
   },
   {
     path: "/chat",
-    element: <ChatPanel />,
+    element: (
+      <RequireAuth>
+        <ChatPanel />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/chat/:id",
+    element: (
+      <RequireAuth>
+        <ChatPanel />
+      </RequireAuth>
+    ),
   },
   {
     path: "*",

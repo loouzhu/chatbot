@@ -7,8 +7,7 @@ interface ApiErrorPayload {
   message?: string;
 }
 
-export interface RequestOptions
-  extends Omit<RequestInit, "body" | "headers"> {
+export interface RequestOptions extends Omit<RequestInit, "body" | "headers"> {
   auth?: boolean;
   body?: unknown;
   headers?: HeadersInit;
@@ -59,4 +58,11 @@ export async function request<T>(
   }
 
   return payload as T;
+}
+
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof ApiError || error instanceof Error) {
+    return error.message;
+  }
+  return "请求失败，请稍后重试";
 }
