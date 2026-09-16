@@ -23,7 +23,6 @@ class MessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     id: str
     role: MessageRole
-    conversation_id: str
     content: str
     created_at: datetime
 

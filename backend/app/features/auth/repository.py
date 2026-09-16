@@ -6,6 +6,7 @@ from typing import Optional
 from app.core.security import hash_token
 from app.features.auth.model import Token, User
 from app.features.auth.schemas import TokenResponse
+from app.features.chat.model import Conversation
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,6 +38,15 @@ class AuthRepository:
                 Token.token_hash == hash_token(token),
                 Token.expire_at > datetime.now(timezone.utc),
             )
+        )
+        user = await self.db.execute(query)
+        return user.scalar_one_or_none()
+
+    async def get_user_by_conversation_id(self, conversation_id: str) -> Optional[User]:
+        query = (
+            select(User)
+            .join(Conversation, Conversation.user_id == User.id)
+            .where(Conversation.id == conversation_id)
         )
         user = await self.db.execute(query)
         return user.scalar_one_or_none()

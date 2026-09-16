@@ -40,7 +40,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/chat/:id",
+    path: "/chat/:conversation_id",
     element: (
       <RequireAuth>
         <ChatPanel />

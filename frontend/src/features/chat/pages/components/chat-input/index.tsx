@@ -1,21 +1,18 @@
-import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
+import type { KeyboardEvent } from "react";
 import { ArrowUpOutlined, PaperClipOutlined } from "@ant-design/icons";
 import { Button, Input } from "antd";
-import type { TextAreaRef } from "antd/es/input/TextArea";
 import styles from "./index.module.less";
 
 interface ChatInputProps {
-  userInput: string;
+  input: string;
   loading: boolean;
-  inputRef: React.RefObject<TextAreaRef | null>;
-  onInputChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onInputChange: (value: string) => void;
+  onSubmit: () => void | Promise<void>;
 }
 
 export function ChatInput({
-  userInput,
+  input,
   loading,
-  inputRef,
   onInputChange,
   onSubmit,
 }: ChatInputProps) {
@@ -29,17 +26,21 @@ export function ChatInput({
       event.currentTarget.form?.requestSubmit();
     }
   };
-
   return (
     <div className={styles.composerArea}>
-      <form className={styles.chatForm} onSubmit={onSubmit}>
+      <form
+        className={styles.chatForm}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void onSubmit();
+        }}
+      >
         <Input.TextArea
-          ref={inputRef}
           autoSize={{ minRows: 1, maxRows: 6 }}
-          value={userInput}
-          onChange={onInputChange}
+          value={input}
+          onChange={(e) => onInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="给 BlueChat 发送消息"
+          placeholder="发送消息"
           disabled={loading}
           aria-label="输入聊天消息"
           variant="borderless"
@@ -61,7 +62,7 @@ export function ChatInput({
             type="primary"
             htmlType="submit"
             icon={<ArrowUpOutlined />}
-            disabled={loading || !userInput.trim()}
+            disabled={loading || !input.trim()}
             aria-label="发送消息"
             title="发送消息"
           />

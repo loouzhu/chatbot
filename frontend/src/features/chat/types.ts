@@ -3,7 +3,6 @@ export type ChatMessageType = "user" | "assistant" | "error" | "system";
 export interface ChatMessage {
   id: string;
   role: ChatMessageType;
-  conversation_id: string;
   content: string;
   created_at: string;
 }
