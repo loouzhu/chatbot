@@ -5,7 +5,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # 该文件用于读取和校验环境变量
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+# load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+load_dotenv(Path(__file__).resolve().parents[2] / "local.env")
 
 
 @dataclass(frozen=True)
@@ -20,7 +21,7 @@ class Settings:
     ALIYUN_DM_ENDPOINT: str
     REDIS_HOST: str
     REDIS_PORT: int
-    frontend_origin: str
+    FRONTEND_ORIGIN: str
 
 
 def get_settings() -> Settings:
@@ -41,7 +42,8 @@ def get_settings() -> Settings:
         ALIYUN_DM_ENDPOINT=os.getenv("ALIYUN_DM_ENDPOINT", "").strip(),
         REDIS_HOST=os.getenv("REDIS_HOST", "localhost").strip(),
         REDIS_PORT=int(os.getenv("REDIS_PORT", "6379")),
-        frontend_origin=os.getenv("FRONTEND_ORIGIN", "http://localhost:5173").strip(),
+        # REDIS_PASSWORD=os.getenv("REDIS_PASSWORD", "").strip(),
+        FRONTEND_ORIGIN=os.getenv("FRONTEND_ORIGIN", "http://localhost:5173").strip(),
     )
 
 

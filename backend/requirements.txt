@@ -8,7 +8,7 @@ alibabacloud_dm20151123
 alibabacloud_credentials
 alibabacloud_tea_openapi
 alibabacloud_tea_util
-SQLAlchemy==2.0.51
+SQLAlchemy[asyncio]==2.0.51
 PyMySQL==1.2.0
 aiomysql
 passlib
