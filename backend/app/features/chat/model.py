@@ -17,6 +17,7 @@ class Conversation(Base):
     user_id: Mapped[str] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    title: Mapped[String] = mapped_column(String(64), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

@@ -32,7 +32,7 @@ Langchain/LangGraph（后期）
 
 全部采用feature-based结构
 
-## 本地运行 Redis
+## 本地运行后端
 
 后端默认连接 `localhost:6379`。启动 FastAPI 前，请先启动 Redis 服务，否则验证码相关接口会报 `ConnectionRefusedError`。
 
@@ -49,3 +49,26 @@ Test-NetConnection localhost -Port 6379
 ```
 
 输出中的 `TcpTestSucceeded` 应为 `True`。
+
+MacOS：
+安装 Homebrew
+   ↓
+安装 MySQL
+   ↓
+安装 Redis
+   ↓
+创建 chatbot 数据库
+   ↓
+配置 local.env
+   ↓
+启动 FastAPI
+   ↓
+项目自动建表
+
+brew services start mysql
+brew services start redis
+cd ~/backend
+source .venv/bin/activate
+python -m uvicorn app.main:app --reload
+cd ~/frontend
+npm run dev

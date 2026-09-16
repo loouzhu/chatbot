@@ -15,9 +15,6 @@ export const useSendChatMessage = () => {
   return useMutation({
     mutationFn: ({ content, conversation_id }: SendMessageRequest) =>
       chatApi.sendChatMessage({ content, conversation_id }),
-    onSuccess: (data: ChatMessage) => {
-      return data;
-    },
     onError: (error: Error) => {
       messageApi.error(getErrorMessage(error));
     },

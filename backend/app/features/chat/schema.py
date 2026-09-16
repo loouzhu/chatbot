@@ -32,3 +32,10 @@ class MessageResponse(BaseModel):
 class ConversationResponse(BaseModel):
     id: str
     messages: list[MessageResponse]
+
+
+# 历史记录对话模型
+class HistoryConversationResponse(BaseModel):
+    id: str
+    title: str
+    created_at: datetime
