@@ -42,6 +42,10 @@ class ChatService:
         )
         await self.repository.add_message(new_db_user_message)
         history = await self.repository.get_history_messages(conversation_id)
+        if not history:
+            await self.repository.set_title(
+                title=new_user_content, conversation_id=conversation.id
+            )
         llm_messages = [
             LLMMessage(role=msg.role, content=msg.content) for msg in history
         ]
@@ -62,10 +66,7 @@ class ChatService:
         )
 
     async def start_new_chat(self, user_id: str) -> ConversationResponse:
-        conversation = Conversation(
-            id=str(uuid4()),
-            user_id=user_id,
-        )
+        conversation = Conversation(id=str(uuid4()), user_id=user_id, title="新对话")
         await self.repository.add_conversation(conversation)
         return ConversationResponse(
             id=conversation.id,
