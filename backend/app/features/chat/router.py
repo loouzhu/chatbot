@@ -1,17 +1,16 @@
 from app.db.session import get_db
+from app.features.auth.dependence import get_current_user
 from app.features.auth.model import User
-from app.features.chat.llm.deepseek import DeepSeekError
 from app.features.chat.repository import ChatRepository
 from app.features.chat.schema import (
     ConversationResponse,
+    HistoryConversationResponse,
     MessageRequest,
     MessageResponse,
 )
 from app.features.chat.service import ChatService
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from backend.app.features.auth.dependence import get_current_user
 
 chat_router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -34,10 +33,21 @@ async def send_message(
     user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
 ) -> MessageResponse:
-    try:
-        response = await service.send_message(
-            request.content, request.conversation_id, user.id
-        )
-        return response
-    except DeepSeekError as exc:
-        raise HTTPException(status_code=502, detail="AI服务暂不可用") from exc
+    return await service.send_message(request.content, request.conversation_id, user.id)
+
+
+@chat_router.get("/history", response_model=list[HistoryConversationResponse])
+async def history(
+    user: User = Depends(get_current_user),
+    service: ChatService = Depends(get_chat_service),
+):
+    return await service.get_history_conversations(user.id)
+
+
+@chat_router.delete("/delete_conversation")
+async def delete_conversation(
+    conversation_id: str,
+    user: User = Depends(get_current_user),
+    service: ChatService = Depends(get_chat_service),
+):
+    await service.delete_conversation(user.id, conversation_id)

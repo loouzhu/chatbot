@@ -21,13 +21,13 @@ async def lifespan(_app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="AI Chatbot API",
-        description="API for interacting with a DeepSeek chatbot.",
+        description="API for interacting with a chatbot.",
         version="1.0.0",
         lifespan=lifespan,
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.frontend_origin],
+        allow_origins=[settings.FRONTEND_ORIGIN],
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=["*"],

@@ -8,7 +8,11 @@ from app.features.chat.constant import MessageRole
 from app.features.chat.llm.base import LLMClient, LLMMessage
 from app.features.chat.llm.deepseek import DeepSeekProvider
 from app.features.chat.model import Conversation, Message
-from app.features.chat.schema import ConversationResponse, MessageResponse
+from app.features.chat.schema import (
+    ConversationResponse,
+    HistoryConversationResponse,
+    MessageResponse,
+)
 
 if TYPE_CHECKING:
     from app.features.chat.repository import ChatRepository
@@ -37,6 +41,10 @@ class ChatService:
         )
         await self.repository.add_message(new_db_user_message)
         history = await self.repository.get_history_messages(conversation_id)
+        if not history:
+            await self.repository.set_title(
+                title=new_user_content, conversation_id=conversation.id
+            )
         llm_messages = [
             LLMMessage(role=msg.role, content=msg.content) for msg in history
         ]
@@ -56,15 +64,25 @@ class ChatService:
         )
 
     async def start_new_chat(self, user_id: str) -> ConversationResponse:
-        conversation = Conversation(
-            id=str(uuid4()),
-            user_id=user_id,
-        )
+        conversation = Conversation(id=str(uuid4()), user_id=user_id, title="新对话")
         await self.repository.add_conversation(conversation)
         return ConversationResponse(
             id=conversation.id,
             messages=[],
         )
+
+    async def get_history_conversations(
+        self, user_id: str
+    ) -> list[HistoryConversationResponse]:
+        return await self.repository.get_history_conversations(user_id)
+
+    async def delete_conversation(self, user_id: str, conversation_id: str):
+        conversation = await self.repository.get_conversation_by_id(conversation_id)
+        if not conversation:
+            raise AppException("未找到对话", "NOT_FOUND", 404)
+        if conversation.user_id != user_id:
+            raise AppException("无权访问该对话", "UNAUTHORIZED", 401)
+        return await self.repository.delete_conversation(conversation_id)
 
 
 def to_db_message(content: str, conversation_id: str, role: MessageRole) -> Message:
