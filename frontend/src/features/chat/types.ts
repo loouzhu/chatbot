@@ -22,3 +22,9 @@ export interface StartNewChatResponse {
   id: string;
   messages: ChatMessage[];
 }
+
+export interface ChatHistoryItem {
+  id: string;
+  title: string;
+  created_at: string;
+}

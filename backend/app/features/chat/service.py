@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from app.core.exceptions import AppException
-from app.features.auth.repository import AuthRepository
 from app.features.chat.constant import MessageRole
 from app.features.chat.llm.base import LLMClient, LLMMessage
 from app.features.chat.llm.deepseek import DeepSeekProvider

@@ -1,11 +1,13 @@
 import { PlusOutlined, RobotOutlined } from "@ant-design/icons";
 import { Button } from "antd";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   useSendChatMessage,
   useMessages,
   useInput,
   useStartNewChat,
+  useGetChatHisory,
+  useChatHistory
 } from "@chat/hooks/useChat";
 import type { ChatMessage } from "@chat/types";
 import styles from "./index.module.less";
@@ -14,13 +16,13 @@ import { ChatInput } from "./components/chat-input";
 import { SideBar } from "./components/side-bar";
 
 export function ChatPanel() {
-  const { messages, setMessages } = useMessages();
   const { input, setInput } = useInput();
+  const { messages, setMessages } = useMessages();
   const { mutateAsync: sendChatMessage, isPending } = useSendChatMessage();
   const { mutateAsync: startNewChat, isPending: isCreatingConversation } =
     useStartNewChat();
+  const { data: history = [], isLoading } = useGetChatHisory();
   let { conversation_id } = useParams();
-  const navigate = useNavigate();
 
   const handleSubmit = async () => {
     const content = input.trim();
@@ -34,9 +36,7 @@ export function ChatPanel() {
 
     try {
       if (!conversation_id) {
-        const conversation = await startNewChat();
-        conversation_id = conversation.id;
-        navigate(`/chat/${conversation_id}`);
+        await startNewChat();
       }
       setInput("");
       setMessages((previousMessages) => [...previousMessages, userMessage]);
@@ -64,7 +64,7 @@ export function ChatPanel() {
   return (
     <main className={styles.chatPage}>
       <SideBar
-        messages={messages}
+        history={history}
         isCreatingConversation={isCreatingConversation}
         onStartNewChat={handleStartNewChat}
       />

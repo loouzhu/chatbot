@@ -1,5 +1,6 @@
 from app.db.session import get_db
 from app.features.chat.model import Conversation, Message
+from app.features.chat.schema import HistoryConversationResponse
 from fastapi import Depends
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,13 +39,23 @@ class ChatRepository:
         return list(result.scalars().all())
 
     # 获取对话的历史记录列表
-    async def get_history_conversations(self, user_id: str):
-        result = await self.db.execute(
+    async def get_history_conversations(
+        self, user_id: str
+    ) -> list[HistoryConversationResponse]:
+        rows = await self.db.execute(
             select(Conversation.id, Conversation.title, Conversation.created_at)
             .where(Conversation.user_id == user_id)
-            .order_by(Conversation.updated_at)
+            .order_by(Conversation.updated_at.desc())
         )
-        return list(result.scalars().all())
+        result = rows.all()
+        return [
+            HistoryConversationResponse(
+                id=conversation.id,
+                title=conversation.title,
+                created_at=conversation.created_at,
+            )
+            for conversation in result
+        ]
 
     # 删除一条对话历史记录
     async def delete_conversation(self, conversation_id: str):
