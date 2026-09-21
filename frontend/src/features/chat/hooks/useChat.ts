@@ -9,7 +9,7 @@ import { chatApi } from "../api/chatApi";
 import { useMessageApi } from "@/app/context";
 import { getErrorMessage } from "@/features/shared/utils/request";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 // 管理信息state
 export const useMessages = () => {
@@ -51,12 +51,10 @@ export const useSendChatMessage = () => {
 export const useStartNewChat = () => {
   const messageApi = useMessageApi();
   const navigate = useNavigate();
-  const { setMessages } = useMessages();
   return useMutation({
     mutationFn: () => chatApi.startNewChat(),
     onSuccess: (data: StartNewChatResponse) => {
       navigate(`/chat/${data.id}`);
-      setMessages(data.messages);
     },
     onError: (error: Error) => {
       messageApi.error(getErrorMessage(error));
@@ -65,9 +63,19 @@ export const useStartNewChat = () => {
 };
 
 // 获取所有对话历史记录
-export const useGetChatHisory = () => {
+export const useGetAllChatHisory = () => {
   return useQuery({
     queryKey: ["chatHistory"],
-    queryFn: () => chatApi.getChatHistory(),
+    queryFn: () => chatApi.getAllChatHistory(),
+  });
+};
+
+// 获取单条对话历史记录消息
+export const useGetOneChatHistory = (conversation_id: string) => {
+  return useQuery({
+    queryKey: ["chatHistory", conversation_id],
+    queryFn: () => {
+      chatApi.getOneChatHistory(conversation_id);
+    },
   });
 };

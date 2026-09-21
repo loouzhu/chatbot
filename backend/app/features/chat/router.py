@@ -36,12 +36,21 @@ async def send_message(
     return await service.send_message(request.content, request.conversation_id, user.id)
 
 
-@chat_router.get("/history", response_model=list[HistoryConversationResponse])
-async def history(
+@chat_router.get("/history/all", response_model=list[HistoryConversationResponse])
+async def all_conversation_history(
     user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
 ):
-    return await service.get_history_conversations(user.id)
+    return await service.get_all_history_conversations(user.id)
+
+
+@chat_router.get("/history/{conversation_id}")
+async def single_conversation_history(
+    conversation_id: str,
+    user: User = Depends(get_current_user),
+    service: ChatService = Depends(get_chat_service),
+):
+    return await service.get_single_conversation_history(user.id, conversation_id)
 
 
 @chat_router.delete("/delete_conversation")

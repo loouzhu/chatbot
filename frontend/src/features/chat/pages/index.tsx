@@ -6,8 +6,7 @@ import {
   useMessages,
   useInput,
   useStartNewChat,
-  useGetChatHisory,
-  useChatHistory
+  useGetAllChatHisory,
 } from "@chat/hooks/useChat";
 import type { ChatMessage } from "@chat/types";
 import styles from "./index.module.less";
@@ -21,7 +20,7 @@ export function ChatPanel() {
   const { mutateAsync: sendChatMessage, isPending } = useSendChatMessage();
   const { mutateAsync: startNewChat, isPending: isCreatingConversation } =
     useStartNewChat();
-  const { data: history = [], isLoading } = useGetChatHisory();
+  const { data: history = [], isLoading: isHistoryLoading } = useGetAllChatHisory();
   let { conversation_id } = useParams();
 
   const handleSubmit = async () => {
@@ -35,14 +34,16 @@ export function ChatPanel() {
     };
 
     try {
-      if (!conversation_id) {
-        await startNewChat();
+      let targetConversationId = conversation_id;
+      if (!targetConversationId) {
+        const newConversation = await startNewChat();
+        targetConversationId = newConversation.id;
       }
       setInput("");
       setMessages((previousMessages) => [...previousMessages, userMessage]);
       const assistantMessage = await sendChatMessage({
         content,
-        conversation_id: conversation_id || "",
+        conversation_id: targetConversationId,
       });
       setMessages((previousMessages) => [
         ...previousMessages,
@@ -78,7 +79,7 @@ export function ChatPanel() {
           <Button
             className={styles.headerNewChat}
             icon={<PlusOutlined />}
-            disabled={!isCreatingConversation}
+            disabled={isCreatingConversation}
             aria-label="新建对话"
             title="新建对话"
             onClick={handleStartNewChat}
@@ -87,7 +88,7 @@ export function ChatPanel() {
           </Button>
         </header>
 
-        <ChatWindow messages={messages} loading={isPending} />
+        <ChatWindow messages={messages} loading={isHistoryLoading} />
         <ChatInput
           input={input}
           loading={isPending}

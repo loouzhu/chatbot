@@ -34,7 +34,7 @@ class LLMProvider:
 
         payload = {
             "model": self.model,
-            "messages": [message.model_dump_json for message in messages],
+            "messages": [message.model_dump() for message in messages],
             "temperature": 0.7,
         }
         headers = {

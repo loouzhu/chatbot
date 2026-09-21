@@ -38,12 +38,13 @@ class ChatService:
             conversation_id=conversation_id,
             role=MessageRole.USER,
         )
-        await self.repository.add_message(new_db_user_message)
+
         history = await self.repository.get_history_messages(conversation_id)
         if not history:
             await self.repository.set_title(
                 title=new_user_content, conversation_id=conversation.id
             )
+        await self.repository.add_message(new_db_user_message)
         llm_messages = [
             LLMMessage(role=msg.role, content=msg.content) for msg in history
         ]
@@ -70,10 +71,25 @@ class ChatService:
             messages=[],
         )
 
-    async def get_history_conversations(
+    async def get_all_history_conversations(
         self, user_id: str
     ) -> list[HistoryConversationResponse]:
-        return await self.repository.get_history_conversations(user_id)
+        return await self.repository.get_all_history_conversations(user_id)
+
+    async def get_single_conversation_history(
+        self, user_id: str, conversation_id: str
+    ) -> ConversationResponse | None:
+        conversation = await self.repository.get_conversation_by_id(conversation_id)
+        if not conversation:
+            raise AppException("未找到对话", "NOT_FOUND", 404)
+        if conversation.user_id != user_id:
+            raise AppException("无权访问该对话", "UNAUTHORIZED", 401)
+        db_messages = await self.repository.get_history_messages(conversation_id)
+        res = ConversationResponse(
+            id=conversation.id,
+            messages=[to_message_response(message) for message in db_messages],
+        )
+        return res
 
     async def delete_conversation(self, user_id: str, conversation_id: str):
         conversation = await self.repository.get_conversation_by_id(conversation_id)

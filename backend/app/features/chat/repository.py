@@ -15,7 +15,7 @@ class ChatRepository:
         self.db.add(message)
         await self.db.commit()
 
-    # 添加一条对话记录
+    # 添加一条Conversation
     async def add_conversation(self, conversation: Conversation):
         self.db.add(conversation)
         await self.db.commit()
@@ -39,7 +39,7 @@ class ChatRepository:
         return list(result.scalars().all())
 
     # 获取对话的历史记录列表
-    async def get_history_conversations(
+    async def get_all_history_conversations(
         self, user_id: str
     ) -> list[HistoryConversationResponse]:
         rows = await self.db.execute(

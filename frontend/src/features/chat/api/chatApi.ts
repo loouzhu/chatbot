@@ -4,6 +4,7 @@ import type {
   SendMessageRequest,
   StartNewChatResponse,
   ChatHistoryItem,
+  Conversation,
 } from "../types";
 
 export const chatApi = {
@@ -26,8 +27,17 @@ export const chatApi = {
   },
 
   // 显示对话历史记录
-  async getChatHistory(): Promise<ChatHistoryItem[]> {
-    return request("chat/history", {
+  async getAllChatHistory(): Promise<ChatHistoryItem[]> {
+    return request("/chat/history/all", {
+      method: "GET",
+      auth: true,
+    });
+  },
+
+  // 获取单条对话历史记录消息
+  async getOneChatHistory(conversationId: String): Promise<Conversation> {
+    return request(`/chat/history/${conversationId}`, {
+      method: "GET",
       auth: true,
     });
   },
