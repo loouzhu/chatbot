@@ -42,12 +42,17 @@ class ChatService:
         history = await self.repository.get_history_messages(conversation_id)
         if not history:
             await self.repository.set_title(
-                title=new_user_content, conversation_id=conversation.id
+                title=new_user_content[:20], conversation_id=conversation.id
             )
         await self.repository.add_message(new_db_user_message)
         llm_messages = [
             LLMMessage(role=msg.role, content=msg.content) for msg in history
         ]
+        llm_messages.append(
+            LLMMessage(
+                role=new_db_user_message.role, content=new_db_user_message.content
+            )
+        )
         # 隐患：考虑使用 async with self.db.begin(): 上下文管理器来显式管理事务，这样任何异常都会自动回滚。
         new_ai_content = await self.client.chat(llm_messages)
         new_db_ai_message = to_db_message(

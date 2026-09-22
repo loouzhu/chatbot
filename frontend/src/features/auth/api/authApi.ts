@@ -5,7 +5,7 @@ import type {
   PasswordResetVerification,
   RegisterInput,
   ResetPasswordInput,
-  VerificationChallenge,
+  SendVerifyCodeResponse,
 } from "../types";
 import { request } from "@shared/utils/request";
 
@@ -25,16 +25,19 @@ export const authApi = {
   },
 
   // 发送登录验证码
-  async requestLoginCode(email: string) {
-    return request("/auth/verify_code", {
+  async requestLoginCode(email: string): Promise<SendVerifyCodeResponse> {
+    return request<SendVerifyCodeResponse>("/auth/verify_code", {
       body: { email, username: email, purpose: "login" },
     });
   },
 
   // 发送注册验证码
-  async requestRegistrationCode(email: string) {
-    return request("/auth/verify_code", {
-      body: { email, username: "user", purpose: "register" },
+  async requestRegistrationCode(
+    email: string,
+    username: string,
+  ): Promise<SendVerifyCodeResponse> {
+    return request<SendVerifyCodeResponse>("/auth/verify_code", {
+      body: { email, username, purpose: "register" },
     });
   },
 
@@ -52,14 +55,14 @@ export const authApi = {
   },
 
   // 密码重置
-  async requestPasswordReset(
-    email: string,
-    username: string,
-  ): Promise<VerificationChallenge> {
-    return request<VerificationChallenge>("/auth/password-reset/code", {
-      body: { email, username },
-    });
-  },
+  // async requestPasswordReset(
+  //   email: string,
+  //   username: string,
+  // ): Promise<VerificationChallenge> {
+  //   return request<VerificationChallenge>("/auth/password-reset/code", {
+  //     body: { email, username },
+  //   });
+  // },
 
   // 验证密码重置
   async verifyPasswordReset(

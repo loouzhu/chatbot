@@ -64,7 +64,8 @@ export const useRequestRegistrationCode = () => {
   const messageApi = useMessageApi();
 
   return useMutation({
-    mutationFn: (email: string) => authApi.requestRegistrationCode(email),
+    mutationFn: ({ email, username }: { email: string; username: string }) =>
+      authApi.requestRegistrationCode(email, username),
     onSuccess: () => {
       messageApi.success("验证码已发送");
     },
@@ -91,16 +92,17 @@ export const useRegister = () => {
 export const useRequestPasswordReset = () => {
   const messageApi = useMessageApi();
 
-  return useMutation({
-    mutationFn: ({ email, username }: { email: string; username: string }) =>
-      authApi.requestPasswordReset(email, username),
-    onSuccess: () => {
-      messageApi.success("重置链接已发送");
-    },
-    onError: (error: unknown) => {
-      messageApi.error(getErrorMessage(error));
-    },
-  });
+  // return useMutation({
+  //   mutationFn: ({ email, username }: { email: string; username: string }) =>
+  //     // authApi.requestPasswordReset(email, username),
+  //   {},
+  //   onSuccess: () => {
+  //     messageApi.success("重置链接已发送");
+  //   },
+  //   onError: (error: unknown) => {
+  //     messageApi.error(getErrorMessage(error));
+  //   },
+  // });
 };
 
 export const useVerifyPasswordReset = () => {

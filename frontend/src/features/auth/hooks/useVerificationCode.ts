@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import type { VerificationChallenge } from "../types";
+import type { SendVerifyCodeResponse } from "../types";
 
 const DEFAULT_COUNTDOWN = 60;
 
 export function useVerificationCode() {
-  const [challenge, setChallenge] = useState<VerificationChallenge | null>(null);
+  const [hasSent, setHasSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [sending, setSending] = useState(false);
 
@@ -15,26 +15,26 @@ export function useVerificationCode() {
   }, [countdown]);
 
   async function send(
-    sender: () => Promise<VerificationChallenge>,
-  ): Promise<VerificationChallenge> {
+    sender: () => Promise<SendVerifyCodeResponse>,
+  ): Promise<SendVerifyCodeResponse> {
     setSending(true);
     try {
-      const nextChallenge = await sender();
-      setChallenge(nextChallenge);
+      const response = await sender();
+      setHasSent(true);
       setCountdown(DEFAULT_COUNTDOWN);
-      return nextChallenge;
+      return response;
     } finally {
       setSending(false);
     }
   }
 
   function reset() {
-    setChallenge(null);
+    setHasSent(false);
     setCountdown(0);
   }
 
   return {
-    challenge,
+    hasSent,
     countdown,
     sending,
     canSend: countdown === 0 && !sending,

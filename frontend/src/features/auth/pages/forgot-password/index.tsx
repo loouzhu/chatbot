@@ -61,34 +61,34 @@ export function ForgotPasswordPage() {
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const nextErrors: FieldErrors<ForgotField> = {
-      email: validateEmail(email),
-      username: validateUsername(username),
-      emailCode: verification.challenge
-        ? validateEmailCode(emailCode)
-        : "请先获取邮箱验证码",
-    };
-    setErrors(nextErrors);
-    setRequestError("");
-    if (Object.values(nextErrors).some(Boolean)) return;
+    // `event.preventDefault();
+    // const nextErrors: FieldErrors<ForgotField> = {
+    //   email: validateEmail(email),
+    //   username: validateUsername(username),
+    //   emailCode: verification.challenge
+    //     ? validateEmailCode(emailCode)
+    //     : "请先获取邮箱验证码",
+    // };
+    // setErrors(nextErrors);
+    // setRequestError("");
+    // if (Object.values(nextErrors).some(Boolean)) return;
 
-    setSubmitting(true);
-    try {
-      const result = await authApi.verifyPasswordReset(
-        verification.challenge!.verificationId,
-        emailCode,
-      );
-      navigate("/auth/reset-password", {
-        state: { resetToken: result.resetToken },
-      });
-    } catch (error) {
-      setRequestError(
-        error instanceof Error ? error.message : "验证失败，请稍后重试",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    // setSubmitting(true);
+    // try {
+    //   const result = await authApi.verifyPasswordReset(
+    //     verification.challenge!.verificationId,
+    //     emailCode,
+    //   );
+    //   navigate("/auth/reset-password", {
+    //     state: { resetToken: result.resetToken },
+    //   });
+    // } catch (error) {
+    //   setRequestError(
+    //     error instanceof Error ? error.message : "验证失败，请稍后重试",
+    //   );
+    // } finally {
+    //   setSubmitting(false);
+    // }`
   }
 
   return (

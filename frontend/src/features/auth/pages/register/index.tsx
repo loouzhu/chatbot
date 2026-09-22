@@ -39,20 +39,27 @@ export function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [emailCode, setEmailCode] = useState("");
+  const [codeSentTo, setCodeSentTo] = useState("");
   const [errors, setErrors] = useState<FieldErrors<RegisterField>>({});
   const [requestError, setRequestError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSendCode() {
     const emailError = validateEmail(email);
-    setErrors((current) => ({ ...current, email: emailError }));
+    const usernameError = validateUsername(username);
+    setErrors((current) => ({
+      ...current,
+      email: emailError,
+      username: usernameError,
+    }));
     setRequestError("");
-    if (emailError || !verification.canSend) return;
+    if (emailError || usernameError || !verification.canSend) return;
 
     try {
       await verification.send(() =>
-        authApi.requestRegistrationCode(email.trim()),
+        authApi.requestRegistrationCode(email.trim(), username.trim()),
       );
+      setCodeSentTo(email.trim());
       messageApi.info("验证码已发送，请前往邮箱查看");
     } catch (error) {
       setRequestError(
@@ -71,7 +78,11 @@ export function RegisterPage() {
     if (!confirmPassword) nextErrors.confirmPassword = "请再次输入密码";
     else if (password !== confirmPassword)
       nextErrors.confirmPassword = "两次输入的密码不一致";
-    if (!verification.challenge) nextErrors.emailCode = "请先获取邮箱验证码";
+    if (!verification.hasSent) {
+      nextErrors.emailCode = "请先获取邮箱验证码";
+    } else if (codeSentTo !== email.trim()) {
+      nextErrors.emailCode = "邮箱已更改，请重新获取验证码";
+    }
     return nextErrors;
   }
 
@@ -136,6 +147,11 @@ export function RegisterPage() {
           value={email}
           error={errors.email}
           onChange={(event) => {
+            if (event.target.value !== email) {
+              verification.reset();
+              setCodeSentTo("");
+              setEmailCode("");
+            }
             setEmail(event.target.value);
             clearError("email");
           }}

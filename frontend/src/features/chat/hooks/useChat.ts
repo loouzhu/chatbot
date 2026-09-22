@@ -9,7 +9,7 @@ import { chatApi } from "../api/chatApi";
 import { useMessageApi } from "@/app/context";
 import { getErrorMessage } from "@/features/shared/utils/request";
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 // 管理信息state
 export const useMessages = () => {

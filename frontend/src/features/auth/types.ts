@@ -27,10 +27,9 @@ export interface AuthSession {
   accessToken?: string;
 }
 
-export interface VerificationChallenge {
-  verificationId: string;
-  expiresIn: number;
-  developmentCode?: string;
+export interface SendVerifyCodeResponse {
+  message: string;
+  code: string;
 }
 
 export interface PasswordResetVerification {

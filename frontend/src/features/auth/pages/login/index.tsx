@@ -122,8 +122,8 @@ function EmailCodeLoginForm() {
       email: validateEmail(email),
       verifyCode: validateEmailCode(verifyCode),
     };
-    if (!verification.challenge) nextErrors.verifyCode = "请先获取邮箱验证码";
-    else if (codeSentTo !== email.trim())
+
+    if (codeSentTo !== email.trim())
       nextErrors.verifyCode = "邮箱已更改，请重新获取验证码";
     setErrors(nextErrors);
     if (Object.values(nextErrors).some(Boolean)) return;
