@@ -14,11 +14,13 @@ class ChatRepository:
     async def add_message(self, message: Message):
         self.db.add(message)
         await self.db.commit()
+        await self.db.refresh(message)
 
     # 添加一条Conversation
     async def add_conversation(self, conversation: Conversation):
         self.db.add(conversation)
         await self.db.commit()
+        await self.db.refresh(conversation)
 
     # 获取当前对话
     async def get_conversation_by_id(self, conversation_id: str) -> Conversation | None:

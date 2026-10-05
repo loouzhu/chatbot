@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 # 该文件用于读取和校验环境变量
 # load_dotenv(Path(__file__).resolve().parents[2] / ".env")
-load_dotenv(Path(__file__).resolve().parents[2] / "local.env")
+load_dotenv(Path(__file__).resolve().parents[2] / "local.env", override=True)
 
 
 @dataclass(frozen=True)

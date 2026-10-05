@@ -35,7 +35,7 @@ export const chatApi = {
   },
 
   // 获取单条对话历史记录消息
-  async getOneChatHistory(conversationId: String): Promise<Conversation> {
+  async getOneChatHistory(conversationId: string): Promise<Conversation> {
     return request(`/chat/history/${conversationId}`, {
       method: "GET",
       auth: true,

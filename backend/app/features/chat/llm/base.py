@@ -53,7 +53,7 @@ class LLMProvider:
                 body = response.json()
         except httpx.HTTPStatusError as exc:
             raise self.error_cls(
-                f"{self.model}请求失败，错误码：{exc.response.status_code}"
+                f"{self.model}请求失败，错误码：{exc.response.status_code}, 错误信息：{exc.response.text}"
             ) from exc
         except httpx.RequestError as exc:
             raise self.error_cls(f"连接{self.model}失败") from exc

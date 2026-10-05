@@ -63,7 +63,7 @@ export const useStartNewChat = () => {
 };
 
 // 获取所有对话历史记录
-export const useGetAllChatHisory = () => {
+export const useGetAllChatHistory = () => {
   return useQuery({
     queryKey: ["chatHistory"],
     queryFn: () => chatApi.getAllChatHistory(),
@@ -74,8 +74,6 @@ export const useGetAllChatHisory = () => {
 export const useGetOneChatHistory = (conversation_id: string) => {
   return useQuery({
     queryKey: ["chatHistory", conversation_id],
-    queryFn: () => {
-      chatApi.getOneChatHistory(conversation_id);
-    },
+    queryFn: () => chatApi.getOneChatHistory(conversation_id),
   });
 };

@@ -6,7 +6,8 @@ import {
   useMessages,
   useInput,
   useStartNewChat,
-  useGetAllChatHisory,
+  useGetAllChatHistory,
+  useGetOneChatHistory,
 } from "@chat/hooks/useChat";
 import type { ChatMessage } from "@chat/types";
 import styles from "./index.module.less";
@@ -15,14 +16,17 @@ import { ChatInput } from "./components/chat-input";
 import { SideBar } from "./components/side-bar";
 
 export function ChatPanel() {
+  const { conversation_id } = useParams();
   const { input, setInput } = useInput();
-  const { messages, setMessages } = useMessages();
+  const { setMessages } = useMessages();
   const { mutateAsync: sendChatMessage, isPending } = useSendChatMessage();
   const { mutateAsync: startNewChat, isPending: isCreatingConversation } =
     useStartNewChat();
-  const { data: history = [], isLoading: isHistoryLoading } = useGetAllChatHisory();
-  let { conversation_id } = useParams();
-
+  const { data: history = [], isLoading: isHistoryLoading } =
+    useGetAllChatHistory();
+  const { data: conversationData } = useGetOneChatHistory(
+    conversation_id || "",
+  );
   const handleSubmit = async () => {
     const content = input.trim();
     if (!content || isPending || isCreatingConversation) return;
@@ -57,8 +61,6 @@ export function ChatPanel() {
   };
 
   const handleStartNewChat = async () => {
-    const data = await startNewChat();
-    setMessages(data.messages);
     setInput("");
   };
 
@@ -88,7 +90,10 @@ export function ChatPanel() {
           </Button>
         </header>
 
-        <ChatWindow messages={messages} loading={isHistoryLoading} />
+        <ChatWindow
+          messages={conversationData?.messages || []}
+          loading={isHistoryLoading}
+        />
         <ChatInput
           input={input}
           loading={isPending}

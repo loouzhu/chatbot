@@ -72,3 +72,10 @@ source .venv/bin/activate
 python -m uvicorn app.main:app --reload
 cd ~/frontend
 npm run dev
+
+## 更新数据库字段
+项目使用alembic更新
+
+cd backend
+..\.venv\Scripts\python.exe -m alembic revision --autogenerate -m "描述本次修改"
+..\.venv\Scripts\python.exe -m alembic upgrade head

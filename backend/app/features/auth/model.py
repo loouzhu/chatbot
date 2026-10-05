@@ -49,7 +49,7 @@ class User(Base):
 
 # 验证码表
 class VerificationCode(Base):
-    __tablename__ = "verification_codes"
+    __tablename__ = "verification_code"
 
     id: Mapped[str] = mapped_column(
         String(64), default=lambda: str(uuid4()), primary_key=True, index=True
@@ -77,7 +77,7 @@ class VerificationCode(Base):
 
 # 密码重置token表
 class PasswordResetToken(Base):
-    __tablename__ = "password_reset_tokens"
+    __tablename__ = "password_reset_token"
 
     id: Mapped[str] = mapped_column(
         String(64), default=lambda: str(uuid4()), primary_key=True, index=True
@@ -105,7 +105,7 @@ class PasswordResetToken(Base):
 
 # token表
 class Token(Base):
-    __tablename__ = "Token"
+    __tablename__ = "token"
 
     id: Mapped[str] = mapped_column(
         String(64), default=lambda: str(uuid4()), primary_key=True, index=True

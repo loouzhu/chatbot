@@ -1,13 +1,12 @@
 import {
   LogoutOutlined,
   MenuFoldOutlined,
-  MessageOutlined,
   PlusOutlined,
   RobotOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { Avatar, Button } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { ChatHistoryItem } from "@chat/types";
 import { useSidebar } from "@chat/hooks/useChat";
 import styles from "./index.module.less";
@@ -24,6 +23,7 @@ export function SideBar({
   onStartNewChat,
 }: SideBarProps) {
   const { sidebarOpen, setSidebarOpen } = useSidebar();
+  const navigate = useNavigate();
   return (
     <aside
       className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ""}`}
@@ -57,17 +57,18 @@ export function SideBar({
 
       <div className={styles.historySection}>
         <p className={styles.historyLabel}>最近</p>
-        {
-          history && history.map((item) => (
+        {history &&
+          history.map((item) => (
             <div
               className={styles.historyItem}
               aria-current="page"
               id={item.id}
+              onClick={() => navigate(`/chat/${item.id}`)}
             >
               <span>{item.title}</span>
+              <hr />
             </div>
-          ))
-        }
+          ))}
       </div>
 
       <div className={styles.sidebarFooter}>

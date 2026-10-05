@@ -1,8 +1,4 @@
 from app.core.config import settings
-from app.db.base import Base
-from app.db.session import engine
-from app.features.auth import model as _auth_model  # noqa: F401
-from app.features.chat import model as _chat_model  # noqa: F401
 from sqlalchemy import text
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -16,13 +12,15 @@ def _async_database_url(database_url: URL) -> URL:
     return database_url
 
 
-async def _create_database_if_missing() -> None:
+async def create_database_if_missing() -> None:
     database_url = _async_database_url(make_url(settings.DATABASE_URL))
     database_name = database_url.database
     if not database_name:
         raise ValueError("DATABASE_URL must include a database name")
 
-    server_url = database_url.set(database=None)
+    # SQLAlchemy's URL.set() ignores None; an empty database path connects
+    # to the MySQL server without selecting the not-yet-created database.
+    server_url = database_url.set(database="")
     server_engine = create_async_engine(server_url, isolation_level="AUTOCOMMIT")
     try:
         async with server_engine.connect() as connection:
@@ -41,13 +39,12 @@ async def _create_database_if_missing() -> None:
 
 
 async def init_db() -> None:
-    await _create_database_if_missing()
-    async with engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
+    """Create the database; Alembic is responsible for creating its tables."""
+    await create_database_if_missing()
 
 
 if __name__ == "__main__":
     import asyncio
 
     asyncio.run(init_db())
-    print("Database tables created successfully.")
+    print("Database created successfully. Run `alembic upgrade head` for tables.")
