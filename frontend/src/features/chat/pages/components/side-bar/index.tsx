@@ -6,7 +6,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { Avatar, Button } from "antd";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import type { ChatHistoryItem } from "@chat/types";
 import { useSidebar } from "@chat/hooks/useChat";
 import styles from "./index.module.less";
@@ -24,6 +24,7 @@ export function SideBar({
 }: SideBarProps) {
   const { sidebarOpen, setSidebarOpen } = useSidebar();
   const navigate = useNavigate();
+  const { conversation_id } = useParams();
   return (
     <aside
       className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ""}`}
@@ -60,8 +61,11 @@ export function SideBar({
         {history &&
           history.map((item) => (
             <div
-              className={styles.historyItem}
-              aria-current="page"
+              key={item.id}
+              className={`${styles.historyItem} ${
+                conversation_id === item.id ? styles.historyItemActive : ""
+              }`}
+              aria-current={conversation_id === item.id ? "page" : undefined}
               id={item.id}
               onClick={() => navigate(`/chat/${item.id}`)}
             >

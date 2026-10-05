@@ -3,13 +3,11 @@ import { Button } from "antd";
 import { useParams } from "react-router-dom";
 import {
   useSendChatMessage,
-  useMessages,
   useInput,
   useStartNewChat,
   useGetAllChatHistory,
   useGetOneChatHistory,
 } from "@chat/hooks/useChat";
-import type { ChatMessage } from "@chat/types";
 import styles from "./index.module.less";
 import { ChatWindow } from "@/features/chat/pages/components/chat-window";
 import { ChatInput } from "./components/chat-input";
@@ -18,7 +16,6 @@ import { SideBar } from "./components/side-bar";
 export function ChatPanel() {
   const { conversation_id } = useParams();
   const { input, setInput } = useInput();
-  const { setMessages } = useMessages();
   const { mutateAsync: sendChatMessage, isPending } = useSendChatMessage();
   const { mutateAsync: startNewChat, isPending: isCreatingConversation } =
     useStartNewChat();
@@ -27,37 +24,21 @@ export function ChatPanel() {
   const { data: conversationData } = useGetOneChatHistory(
     conversation_id || "",
   );
+
   const handleSubmit = async () => {
     const content = input.trim();
     if (!content || isPending || isCreatingConversation) return;
-    const userMessage: ChatMessage = {
-      id: "",
-      role: "user",
-      content,
-      created_at: "",
-    };
 
-    try {
-      let targetConversationId = conversation_id;
-      if (!targetConversationId) {
-        const newConversation = await startNewChat();
-        targetConversationId = newConversation.id;
-      }
-      setInput("");
-      setMessages((previousMessages) => [...previousMessages, userMessage]);
-      const assistantMessage = await sendChatMessage({
-        content,
-        conversation_id: targetConversationId,
-      });
-      setMessages((previousMessages) => [
-        ...previousMessages,
-        assistantMessage,
-      ]);
-    } catch {
-      setMessages((previousMessages) =>
-        previousMessages.filter((message) => message !== userMessage),
-      );
+    let targetConversationId = conversation_id;
+    if (!targetConversationId) {
+      const newConversation = await startNewChat();
+      targetConversationId = newConversation.id;
     }
+    setInput("");
+    await sendChatMessage({
+      content,
+      conversation_id: targetConversationId,
+    });
   };
 
   const handleStartNewChat = async () => {
@@ -91,7 +72,7 @@ export function ChatPanel() {
         </header>
 
         <ChatWindow
-          messages={conversationData?.messages || []}
+          messages={conversationData?.messages ?? []}
           loading={isHistoryLoading}
         />
         <ChatInput

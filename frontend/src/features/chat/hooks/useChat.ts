@@ -1,7 +1,8 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChatHistoryItem,
   ChatMessage,
+  Conversation,
   SendMessageRequest,
   StartNewChatResponse,
 } from "../types";
@@ -38,11 +39,40 @@ export const useInput = () => {
 // 发送信息
 export const useSendChatMessage = () => {
   const messageApi = useMessageApi();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ content, conversation_id }: SendMessageRequest) =>
       chatApi.sendChatMessage({ content, conversation_id }),
-    onError: (error: Error) => {
+    onMutate: async ({ content, conversation_id }: SendMessageRequest) => {
+      const queryKey = ["chatHistory", conversation_id];
+      await queryClient.cancelQueries({ queryKey });
+      const previousConversation =
+        queryClient.getQueryData<Conversation>(queryKey);
+      const optimisticMessage: ChatMessage = {
+        id: `temp-${Date.now()}`,
+        role: "user",
+        content,
+        created_at: new Date().toISOString(),
+      };
+      queryClient.setQueryData(queryKey, (oldData: Conversation) => ({
+        id: conversation_id,
+        messages: [...(oldData?.messages || []), optimisticMessage],
+      }));
+      return { queryKey, previousConversation };
+    },
+    onError: (error: Error, _variables, onMutateResult) => {
       messageApi.error(getErrorMessage(error));
+      if (onMutateResult) {
+        queryClient.setQueryData(
+          onMutateResult.queryKey,
+          onMutateResult.previousConversation,
+        );
+      }
+    },
+    onSettled: async (_data, _error, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: ["chatHistory", variables.conversation_id],
+      });
     },
   });
 };
