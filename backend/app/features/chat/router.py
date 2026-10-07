@@ -6,10 +6,10 @@ from app.features.chat.schema import (
     ConversationResponse,
     HistoryConversationResponse,
     MessageRequest,
-    MessageResponse,
 )
 from app.features.chat.service import ChatService
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 chat_router = APIRouter(prefix="/chat", tags=["Chat"])
@@ -27,13 +27,24 @@ async def start_new_chat(
     return await service.start_new_chat(user_id=user.id)
 
 
-@chat_router.post("/send_message", response_model=MessageResponse)
-async def send_message(
+@chat_router.post("/request_message", response_model=None)
+async def request_message(
     request: MessageRequest,
     user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
-) -> MessageResponse:
-    return await service.send_message(request.content, request.conversation_id, user.id)
+):
+    async def event_generator():
+        async for event in service.stream_message(
+            request.content,
+            request.conversation_id,
+            user.id,
+        ):
+            yield f"data: {event.model_dump_json()}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+    )
 
 
 @chat_router.get("/history/all", response_model=list[HistoryConversationResponse])

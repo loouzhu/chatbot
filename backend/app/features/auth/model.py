@@ -3,7 +3,8 @@ from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
 from app.db.base import Base
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import DateTime, ForeignKey, String, text
+from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
@@ -24,9 +25,9 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="active")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
         nullable=False,
-        default=func.now(),
+        server_default=text("CURRENT_TIMESTAMP(6)"),
     )
 
     verification_codes: Mapped[list["VerificationCode"]] = relationship(
@@ -62,14 +63,18 @@ class VerificationCode(Base):
     target: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     code_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     type: Mapped[str] = mapped_column(String(20), nullable=False)
-    expire_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expire_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
+        nullable=False,
+    )
     used_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
+        nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
         nullable=False,
-        default=func.now(),
+        server_default=text("CURRENT_TIMESTAMP(6)"),
     )
 
     user: Mapped[Optional[User]] = relationship(back_populates="verification_codes")
@@ -89,15 +94,17 @@ class PasswordResetToken(Base):
     )
     token_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
+        nullable=False,
     )
     used_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
+        nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
         nullable=False,
-        default=func.now(),
+        server_default=text("CURRENT_TIMESTAMP(6)"),
     )
 
     user: Mapped[User] = relationship(back_populates="password_reset_tokens")
@@ -116,11 +123,14 @@ class Token(Base):
         index=True,
     )
     token_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    expire_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+    expire_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
         nullable=False,
-        server_default=func.now(),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP(6)"),
     )
 
     user: Mapped[User] = relationship(back_populates="token")

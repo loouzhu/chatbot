@@ -15,6 +15,12 @@ class ChatRepository:
         self.db.add(message)
         await self.db.commit()
         await self.db.refresh(message)
+        return message
+
+    # 更新一条Message
+    async def update_message(self, message: Message):
+        await self.db.commit()
+        await self.db.refresh(message)
 
     # 添加一条Conversation
     async def add_conversation(self, conversation: Conversation):

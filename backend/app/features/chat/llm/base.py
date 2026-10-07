@@ -1,7 +1,9 @@
-from typing import Protocol
+from collections.abc import AsyncIterator
+from typing import Protocol, cast
 
-import httpx
 from app.features.chat.schema import MessageRole
+from openai import AsyncOpenAI
+from openai.types.responses import ResponseInputItemParam, ResponseStreamEvent
 from pydantic import BaseModel
 
 
@@ -12,7 +14,22 @@ class LLMMessage(BaseModel):
 
 # 任何实现了chat类都能被视为LLM客户端
 class LLMClient(Protocol):
-    async def chat(self, messages: list[LLMMessage]) -> str: ...
+    def stream_chat(
+        self, messages: list[LLMMessage]
+    ) -> AsyncIterator[ResponseStreamEvent]: ...
+
+
+def to_openai_messages(messages: list[LLMMessage]) -> list[ResponseInputItemParam]:
+    return [
+        cast(
+            ResponseInputItemParam,
+            {
+                "role": message.role.value,
+                "content": message.content,
+            },
+        )
+        for message in messages
+    ]
 
 
 class LLMProvider:
@@ -28,37 +45,25 @@ class LLMProvider:
         self.api_url = api_url
         self.error_cls = error_cls
 
-    async def chat(self, messages: list[LLMMessage]) -> str:
+    async def stream_chat(
+        self, messages: list[LLMMessage]
+    ) -> AsyncIterator[ResponseStreamEvent]:
         if not self.api_key:
             raise self.error_cls("缺少APIKey")
+        if not self.model:
+            raise self.error_cls("缺少模型名称")
+        if not self.api_url:
+            raise self.error_cls("缺少API地址")
+        client = AsyncOpenAI(
+            api_key=self.api_key,
+            base_url=self.api_url,
+        )
 
-        payload = {
-            "model": self.model,
-            "messages": [message.model_dump() for message in messages],
-            "temperature": 0.7,
-        }
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
-        }
+        stream = await client.responses.create(
+            model=self.model,
+            input=to_openai_messages(messages),
+            stream=True,
+        )
 
-        try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.post(
-                    self.api_url,
-                    json=payload,
-                    headers=headers,
-                )
-                response.raise_for_status()
-                body = response.json()
-        except httpx.HTTPStatusError as exc:
-            raise self.error_cls(
-                f"{self.model}请求失败，错误码：{exc.response.status_code}, 错误信息：{exc.response.text}"
-            ) from exc
-        except httpx.RequestError as exc:
-            raise self.error_cls(f"连接{self.model}失败") from exc
-
-        try:
-            return body["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise self.error_cls(f"{self.model}回复失败") from exc
+        async for chunk in stream:
+            yield chunk

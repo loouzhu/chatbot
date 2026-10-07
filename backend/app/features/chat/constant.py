@@ -6,3 +6,11 @@ class MessageRole(str, enum.Enum):
     ASSISTANT = "assistant"
     SYSTEM = "system"
     TOOL = "tool"
+
+
+class MessageType(str, enum.Enum):
+    CREATED = "created"
+    GENERATING = "generating"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"

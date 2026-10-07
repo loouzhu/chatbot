@@ -68,7 +68,7 @@ MacOS：
 brew services start mysql
 brew services start redis
 cd ~/backend
-source .venv/bin/activate
+source .venv/bin/activate or cd backend ..\.venv\Scripts\Activate.ps1
 python -m uvicorn app.main:app --reload
 cd ~/frontend
 npm run dev
@@ -77,5 +77,5 @@ npm run dev
 项目使用alembic更新
 
 cd backend
-..\.venv\Scripts\python.exe -m alembic revision --autogenerate -m "描述本次修改"
-..\.venv\Scripts\python.exe -m alembic upgrade head
+python -m alembic revision --autogenerate -m "描述本次修改"
+python -m alembic upgrade head

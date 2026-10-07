@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ChatHistoryItem,
   ChatMessage,
   Conversation,
   SendMessageRequest,
@@ -12,22 +11,10 @@ import { getErrorMessage } from "@/features/shared/utils/request";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// 管理信息state
-export const useMessages = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  return { messages, setMessages };
-};
-
 // 管理侧边栏开关state
 export const useSidebar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return { sidebarOpen, setSidebarOpen };
-};
-
-// 管理历史记录数据state
-export const useChatHistory = () => {
-  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
-  return { chatHistory, setChatHistory };
 };
 
 // 管理输入框state
@@ -36,26 +23,94 @@ export const useInput = () => {
   return { input, setInput };
 };
 
-// 发送信息
-export const useSendChatMessage = () => {
+// 发送流式消息
+export const useStreamMessage = () => {
   const messageApi = useMessageApi();
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: ({ content, conversation_id }: SendMessageRequest) =>
-      chatApi.sendChatMessage({ content, conversation_id }),
-    onMutate: async ({ content, conversation_id }: SendMessageRequest) => {
-      const queryKey = ["chatHistory", conversation_id];
+    mutationFn: async (request: SendMessageRequest) => {
+      const queryKey = ["chatHistory", request.conversation_id];
+      let assistantMessageId: string | null = null;
+
+      await chatApi.sendStreamMessage(request, (event) => {
+        if (event.type === "created") {
+          assistantMessageId = event.data.id;
+          queryClient.setQueryData<Conversation>(queryKey, (conversation) => {
+            const messages = conversation?.messages ?? [];
+            if (messages.some((message) => message.id === event.data.id)) {
+              return conversation;
+            }
+
+            const assistantMessage: ChatMessage = {
+              id: event.data.id,
+              role: event.data.role,
+              content: "",
+              status: "created",
+              created_at: new Date().toISOString(),
+            };
+            return {
+              id: request.conversation_id,
+              messages: [...messages, assistantMessage],
+            };
+          });
+          return;
+        }
+
+        if (event.type === "generating") {
+          if (!assistantMessageId) return;
+          queryClient.setQueryData<Conversation>(queryKey, (conversation) => {
+            if (!conversation) return conversation;
+            return {
+              ...conversation,
+              messages: conversation.messages.map((message) =>
+                message.id === assistantMessageId
+                  ? {
+                      ...message,
+                      content: message.content + event.data.content,
+                      status: "generating",
+                    }
+                  : message,
+              ),
+            };
+          });
+          return;
+        }
+
+        const completedMessage = event.data.message;
+        assistantMessageId = completedMessage.id;
+        queryClient.setQueryData<Conversation>(queryKey, (conversation) => {
+          const messages = conversation?.messages ?? [];
+          const exists = messages.some(
+            (message) => message.id === completedMessage.id,
+          );
+          return {
+            id: request.conversation_id,
+            messages: exists
+              ? messages.map((message) =>
+                  message.id === completedMessage.id
+                    ? completedMessage
+                    : message,
+                )
+              : [...messages, completedMessage],
+          };
+        });
+      });
+    },
+    onMutate: async (request: SendMessageRequest) => {
+      const queryKey = ["chatHistory", request.conversation_id];
       await queryClient.cancelQueries({ queryKey });
       const previousConversation =
         queryClient.getQueryData<Conversation>(queryKey);
       const optimisticMessage: ChatMessage = {
         id: `temp-${Date.now()}`,
         role: "user",
-        content,
+        content: request.content,
+        status: "completed",
         created_at: new Date().toISOString(),
       };
-      queryClient.setQueryData(queryKey, (oldData: Conversation) => ({
-        id: conversation_id,
+      queryClient.setQueryData<Conversation>(queryKey, (oldData) => ({
+        id: request.conversation_id,
         messages: [...(oldData?.messages || []), optimisticMessage],
       }));
       return { queryKey, previousConversation };
@@ -69,10 +124,8 @@ export const useSendChatMessage = () => {
         );
       }
     },
-    onSettled: async (_data, _error, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["chatHistory", variables.conversation_id],
-      });
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["chatHistory"] });
     },
   });
 };

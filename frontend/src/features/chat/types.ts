@@ -1,16 +1,49 @@
-export type ChatMessageType = "user" | "assistant" | "error" | "system";
+export type MessageRole = "user" | "assistant" | "error" | "system";
+export type MessageStatus =
+  | "created"
+  | "generating"
+  | "completed"
+  | "failed"
+  | "cancelled";
 
 export interface ChatMessage {
   id: string;
-  role: ChatMessageType;
+  role: MessageRole;
   content: string;
+  status: MessageStatus;
   created_at: string;
+}
+
+export type StreamResponse =
+  | {
+      type: "created";
+      data: StreamCreatedData;
+    }
+  | {
+      type: "generating";
+      data: StreamGeneratingData;
+    }
+  | {
+      type: "completed";
+      data: StreamDoneData;
+    };
+
+export interface StreamCreatedData {
+  id: string;
+  role: MessageRole;
+}
+
+export interface StreamGeneratingData {
+  content: string;
+}
+
+export interface StreamDoneData {
+  message: ChatMessage;
 }
 
 export interface Conversation {
   id: string;
   messages: ChatMessage[];
-  createdAt: Date;
 }
 
 export interface SendMessageRequest {

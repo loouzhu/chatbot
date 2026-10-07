@@ -2,8 +2,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from app.db.base import Base
-from app.features.chat.constant import MessageRole
-from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from app.features.chat.constant import MessageRole, MessageType
+from sqlalchemy import DateTime, ForeignKey, String, Text, text
+from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
@@ -19,15 +20,16 @@ class Conversation(Base):
     )
     title: Mapped[String] = mapped_column(String(64), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
         nullable=False,
-        default=func.now(),
+        server_default=text("CURRENT_TIMESTAMP(6)"),
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
         nullable=False,
-        default=func.now(),
-        onupdate=func.now(),
+        server_default=text(
+            "CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)"
+        ),
     )
     user: Mapped["User"] = relationship(back_populates="conversations")
     messages: Mapped[list["Message"]] = relationship(
@@ -47,10 +49,13 @@ class Message(Base):
     role: Mapped[MessageRole] = mapped_column(
         String(20), nullable=False, default=MessageRole.USER
     )
+    status: Mapped[MessageType] = mapped_column(
+        String(20), nullable=False, default=MessageType.CREATED
+    )
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
         nullable=False,
-        default=func.now(),
+        server_default=text("CURRENT_TIMESTAMP(6)"),
     )
     conversation: Mapped["Conversation"] = relationship(back_populates="messages")

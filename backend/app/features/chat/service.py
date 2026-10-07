@@ -1,9 +1,10 @@
 import uuid
+from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from app.core.exceptions import AppException
-from app.features.chat.constant import MessageRole
+from app.features.chat.constant import MessageRole, MessageType
 from app.features.chat.llm.base import LLMClient, LLMMessage
 from app.features.chat.llm.deepseek import DeepSeekProvider
 from app.features.chat.model import Conversation, Message
@@ -11,6 +12,10 @@ from app.features.chat.schema import (
     ConversationResponse,
     HistoryConversationResponse,
     MessageResponse,
+    StreamCreatedData,
+    StreamDoneData,
+    StreamGenerateData,
+    StreamResponse,
 )
 
 if TYPE_CHECKING:
@@ -22,12 +27,58 @@ class ChatService:
         self.client = client or DeepSeekProvider()
         self.repository = repository
 
-    async def send_message(
+    async def stream_message(
         self,
         new_user_content: str,
         conversation_id: str,
         user_id: str,
-    ) -> MessageResponse:
+    ) -> AsyncIterator[StreamResponse]:
+        llm_messages = await self._prepare_messages(
+            new_user_content=new_user_content,
+            conversation_id=conversation_id,
+            user_id=user_id,
+        )
+
+        new_db_ai_message = to_db_message(
+            content="",
+            conversation_id=conversation_id,
+            status=MessageType.CREATED,
+            role=MessageRole.ASSISTANT,
+        )
+        new_db_ai_message = await self.repository.add_message(new_db_ai_message)
+
+        yield StreamResponse(
+            type=MessageType.CREATED,
+            data=to_stream_created_data(
+                new_db_ai_message.id,
+                new_db_ai_message.role,
+            ),
+        )
+
+        full_content = new_db_ai_message.content
+        async for chunk in self.client.stream_chat(llm_messages):
+            if chunk.type == "response.output_text.delta":
+                full_content += chunk.delta
+
+                yield StreamResponse(
+                    type=MessageType.GENERATING,
+                    data=to_stream_generate_data(chunk.delta),
+                )
+
+        new_db_ai_message.content = full_content
+        new_db_ai_message.status = MessageType.COMPLETED
+        await self.repository.update_message(new_db_ai_message)
+        yield StreamResponse(
+            type=MessageType.COMPLETED,
+            data=to_stream_done_data(new_db_ai_message),
+        )
+
+    async def _prepare_messages(
+        self,
+        new_user_content: str,
+        conversation_id: str,
+        user_id: str,
+    ) -> list[LLMMessage]:
         conversation = await self.repository.get_conversation_by_id(conversation_id)
         if not conversation:
             raise AppException("没有找到该对话", "NOTFOUND", 404)
@@ -35,6 +86,7 @@ class ChatService:
             raise AppException("无权访问该对话", "UNAUTHORIZED", 403)
         new_db_user_message = to_db_message(
             content=new_user_content,
+            status=MessageType.COMPLETED,
             conversation_id=conversation_id,
             role=MessageRole.USER,
         )
@@ -53,20 +105,7 @@ class ChatService:
                 role=new_db_user_message.role, content=new_db_user_message.content
             )
         )
-        # 隐患：考虑使用 async with self.db.begin(): 上下文管理器来显式管理事务，这样任何异常都会自动回滚。
-        new_ai_content = await self.client.chat(llm_messages)
-        new_db_ai_message = to_db_message(
-            content=new_ai_content,
-            conversation_id=conversation_id,
-            role=MessageRole.ASSISTANT,
-        )
-        await self.repository.add_message(new_db_ai_message)
-        return MessageResponse(
-            id=new_db_ai_message.id,
-            role=new_db_ai_message.role,
-            content=new_db_ai_message.content,
-            created_at=new_db_ai_message.created_at,
-        )
+        return llm_messages
 
     async def start_new_chat(self, user_id: str) -> ConversationResponse:
         conversation = Conversation(id=str(uuid4()), user_id=user_id, title="新对话")
@@ -90,11 +129,10 @@ class ChatService:
         if conversation.user_id != user_id:
             raise AppException("无权访问该对话", "UNAUTHORIZED", 401)
         db_messages = await self.repository.get_history_messages(conversation_id)
-        res = ConversationResponse(
+        return ConversationResponse(
             id=conversation.id,
             messages=[to_message_response(message) for message in db_messages],
         )
-        return res
 
     async def delete_conversation(self, user_id: str, conversation_id: str):
         conversation = await self.repository.get_conversation_by_id(conversation_id)
@@ -105,10 +143,13 @@ class ChatService:
         return await self.repository.delete_conversation(conversation_id)
 
 
-def to_db_message(content: str, conversation_id: str, role: MessageRole) -> Message:
+def to_db_message(
+    content: str, conversation_id: str, status: MessageType, role: MessageRole
+) -> Message:
     return Message(
         id=str(uuid.uuid4()),
         content=content,
+        status=status,
         conversation_id=conversation_id,
         role=role,
     )
@@ -118,9 +159,22 @@ def to_message_response(message: Message) -> MessageResponse:
     return MessageResponse(
         id=message.id,
         role=message.role,
+        status=message.status,
         content=message.content,
         created_at=message.created_at,
     )
+
+
+def to_stream_created_data(id: str, role: MessageRole) -> StreamCreatedData:
+    return StreamCreatedData(id=id, role=role)
+
+
+def to_stream_generate_data(content: str) -> StreamGenerateData:
+    return StreamGenerateData(content=content)
+
+
+def to_stream_done_data(message: Message) -> StreamDoneData:
+    return StreamDoneData(message=to_message_response(message))
 
 
 # async def transform_message(
