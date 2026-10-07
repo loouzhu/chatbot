@@ -24,7 +24,6 @@ class MessageResponse(BaseModel):
     id: str
     role: MessageRole
     content: str
-    status: MessageType
     created_at: datetime
 
 
@@ -44,10 +43,21 @@ class StreamDoneData(BaseModel):
     message: MessageResponse
 
 
+# 流式输出失败data
+class ErrorInfoResponse(BaseModel):
+    error_code: str
+    error_message: str
+
+
+class StreamFailedData(BaseModel):
+    message: MessageResponse
+    error: ErrorInfoResponse
+
+
 # 流式输出消息模型
 class StreamResponse(BaseModel):
     type: MessageType
-    data: StreamCreatedData | StreamGenerateData | StreamDoneData
+    data: StreamCreatedData | StreamGenerateData | StreamDoneData | StreamFailedData
 
 
 # 对话模型

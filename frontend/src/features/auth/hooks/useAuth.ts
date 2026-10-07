@@ -90,7 +90,7 @@ export const useRegister = () => {
 };
 
 export const useRequestPasswordReset = () => {
-  const messageApi = useMessageApi();
+  // const messageApi = useMessageApi();
 
   // return useMutation({
   //   mutationFn: ({ email, username }: { email: string; username: string }) =>

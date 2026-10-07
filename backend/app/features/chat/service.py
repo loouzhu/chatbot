@@ -10,13 +10,16 @@ from app.features.chat.llm.deepseek import DeepSeekProvider
 from app.features.chat.model import Conversation, Message
 from app.features.chat.schema import (
     ConversationResponse,
+    ErrorInfoResponse,
     HistoryConversationResponse,
     MessageResponse,
     StreamCreatedData,
     StreamDoneData,
+    StreamFailedData,
     StreamGenerateData,
     StreamResponse,
 )
+from openai.types.responses import ResponseErrorEvent
 
 if TYPE_CHECKING:
     from app.features.chat.repository import ChatRepository
@@ -59,11 +62,19 @@ class ChatService:
         async for chunk in self.client.stream_chat(llm_messages):
             if chunk.type == "response.output_text.delta":
                 full_content += chunk.delta
-
                 yield StreamResponse(
                     type=MessageType.GENERATING,
                     data=to_stream_generate_data(chunk.delta),
                 )
+            elif chunk.type == "error":
+                new_db_ai_message.content = full_content
+                new_db_ai_message.status = MessageType.FAILED
+                await self.repository.update_message(new_db_ai_message)
+                yield StreamResponse(
+                    type=MessageType.FAILED,
+                    data=to_stream_failed_data(new_db_ai_message, chunk),
+                )
+                return
 
         new_db_ai_message.content = full_content
         new_db_ai_message.status = MessageType.COMPLETED
@@ -159,7 +170,6 @@ def to_message_response(message: Message) -> MessageResponse:
     return MessageResponse(
         id=message.id,
         role=message.role,
-        status=message.status,
         content=message.content,
         created_at=message.created_at,
     )
@@ -175,6 +185,17 @@ def to_stream_generate_data(content: str) -> StreamGenerateData:
 
 def to_stream_done_data(message: Message) -> StreamDoneData:
     return StreamDoneData(message=to_message_response(message))
+
+
+def to_stream_failed_data(
+    message: Message, chunk: ResponseErrorEvent
+) -> StreamFailedData:
+    return StreamFailedData(
+        message=to_message_response(message),
+        error=ErrorInfoResponse(
+            error_code=chunk.code or "UNKNOWN ERROR", error_message=chunk.message
+        ),
+    )
 
 
 # async def transform_message(

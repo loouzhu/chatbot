@@ -27,9 +27,7 @@ class Conversation(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
         nullable=False,
-        server_default=text(
-            "CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)"
-        ),
+        server_default=text("CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)"),
     )
     user: Mapped["User"] = relationship(back_populates="conversations")
     messages: Mapped[list["Message"]] = relationship(
@@ -52,6 +50,8 @@ class Message(Base):
     status: Mapped[MessageType] = mapped_column(
         String(20), nullable=False, default=MessageType.CREATED
     )
+    error_code: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    error_message: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),

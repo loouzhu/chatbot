@@ -76,8 +76,15 @@ export const useStreamMessage = () => {
           });
           return;
         }
-
-        const completedMessage = event.data.message;
+        const completedMessage: ChatMessage =
+          event.type === "failed"
+            ? {
+                ...event.data.message,
+                status: "failed",
+                error_code: event.data.error.error_code,
+                error_message: event.data.error.error_message,
+              }
+            : event.data.message;
         assistantMessageId = completedMessage.id;
         queryClient.setQueryData<Conversation>(queryKey, (conversation) => {
           const messages = conversation?.messages ?? [];

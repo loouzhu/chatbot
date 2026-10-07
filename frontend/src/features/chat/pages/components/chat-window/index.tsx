@@ -93,6 +93,9 @@ export function ChatWindow({ messages, loading }: ChatWindowProps) {
                     : "BlueChat"}
               </p>
               <div className={styles.message}>{message.content}</div>
+              {message.error_message && (
+                <div className={styles.errorMessage}>{message.error_message}</div>
+              )}
               {message.role === "assistant" && (
                 <Button
                   className={styles.copyButton}

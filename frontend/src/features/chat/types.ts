@@ -6,12 +6,19 @@ export type MessageStatus =
   | "failed"
   | "cancelled";
 
+export interface MessageError {
+  error_code: string;
+  error_message: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: MessageRole;
   content: string;
   status: MessageStatus;
   created_at: string;
+  error_code?: string;
+  error_message?: string;
 }
 
 export type StreamResponse =
@@ -26,6 +33,10 @@ export type StreamResponse =
   | {
       type: "completed";
       data: StreamDoneData;
+    }
+  | {
+      type: "failed";
+      data: StreamFailedData;
     };
 
 export interface StreamCreatedData {
@@ -39,6 +50,11 @@ export interface StreamGeneratingData {
 
 export interface StreamDoneData {
   message: ChatMessage;
+}
+
+export interface StreamFailedData {
+  message: ChatMessage;
+  error: MessageError;
 }
 
 export interface Conversation {
