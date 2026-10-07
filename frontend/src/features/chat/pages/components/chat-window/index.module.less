@@ -144,11 +144,19 @@
 }
 
 .message {
+  min-width: 0;
   color: #30312e;
   font-size: 15px;
   line-height: 1.75;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+}
+
+.messageContent {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .errorMessage {
@@ -157,6 +165,20 @@
   font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
+}
+
+.retryButton {
+  height: 28px;
+  flex: 0 0 auto;
+  padding: 0 7px;
+  border-radius: 6px;
+  color: #7b7c77;
+  font-size: 12px;
+}
+
+.retryButton:hover {
+  color: #0b7a68;
+  background: #eef7f4;
 }
 
 .user {

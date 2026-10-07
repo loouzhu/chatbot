@@ -5,6 +5,7 @@ import {
   // CodeOutlined,
   CopyOutlined,
   // EditOutlined,
+  ReloadOutlined,
   RobotOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
@@ -70,49 +71,86 @@ export function ChatWindow({ messages, loading }: ChatWindowProps) {
           </div>
         )}
 
-        {messages.map((message, index) => (
-          <article
-            key={`${message.role}-${index}`}
-            className={`${styles.messageRow} ${styles[message.role]}`}
-          >
-            <div className={styles.messageAvatar} aria-hidden="true">
-              {message.role === "user" ? (
-                <span>你</span>
-              ) : message.role === "error" ? (
-                <span>!</span>
-              ) : (
-                <RobotOutlined />
-              )}
-            </div>
-            <div className={styles.messageBody}>
-              <p className={styles.messageAuthor}>
-                {message.role === "user"
-                  ? "你"
-                  : message.role === "error"
-                    ? "系统提示"
-                    : "BlueChat"}
-              </p>
-              <div className={styles.message}>{message.content}</div>
-              {message.error_message && (
-                <div className={styles.errorMessage}>{message.error_message}</div>
-              )}
-              {message.role === "assistant" && (
-                <Button
-                  className={styles.copyButton}
-                  type="text"
-                  icon={
-                    copiedIndex === index ? <CheckOutlined /> : <CopyOutlined />
-                  }
-                  title="复制回答"
-                  aria-label="复制回答"
-                  onClick={() => void copyMessage(message.content, index)}
-                >
-                  {copiedIndex === index ? "已复制" : "复制"}
-                </Button>
-              )}
-            </div>
-          </article>
-        ))}
+        {messages.map((message, index) => {
+          const waitingForContent =
+            message.status === "created" && !message.content;
+          const failed = message.status === "failed";
+
+          return (
+            <article
+              key={`${message.role}-${index}`}
+              className={`${styles.messageRow} ${styles[message.role]}`}
+            >
+              <div className={styles.messageAvatar} aria-hidden="true">
+                {message.role === "user" ? (
+                  <span>你</span>
+                ) : message.role === "error" ? (
+                  <span>!</span>
+                ) : (
+                  <RobotOutlined />
+                )}
+              </div>
+              <div className={styles.messageBody}>
+                <p className={styles.messageAuthor}>
+                  {message.role === "user"
+                    ? "你"
+                    : message.role === "error"
+                      ? "系统提示"
+                      : "BlueChat"}
+                </p>
+                <div className={styles.messageContent}>
+                  {waitingForContent ? (
+                    <div
+                      className={styles.loadingIndicator}
+                      aria-label="AI 正在生成回答"
+                    >
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                  ) : (
+                    <div className={styles.message}>{message.content}</div>
+                  )}
+                  {failed && (
+                    <Button
+                      className={styles.retryButton}
+                      type="text"
+                      size="small"
+                      icon={<ReloadOutlined />}
+                      title="重试"
+                      aria-label="重试生成回答"
+                    >
+                      重试
+                    </Button>
+                  )}
+                </div>
+                {message.error_message && (
+                  <div className={styles.errorMessage}>
+                    {message.error_message}
+                  </div>
+                )}
+                {message.role === "assistant" && message.content && (
+                  <Button
+                    className={styles.copyButton}
+                    type="text"
+                    icon={
+                      copiedIndex === index ? (
+                        <CheckOutlined />
+                      ) : (
+                        <CopyOutlined />
+                      )
+                    }
+                    title="复制回答"
+                    aria-label="复制回答"
+                    onClick={() => void copyMessage(message.content, index)}
+                  >
+                    {copiedIndex === index ? "已复制" : "复制"}
+                  </Button>
+                )}
+              </div>
+            </article>
+          );
+        })}
 
         {loading && (
           <article className={`${styles.messageRow} ${styles.bot}`}>
