@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from app.core.exceptions import AppException
 from app.features.chat.constant import MessageRole, MessageType
+from app.features.chat.context import valid_context
 from app.features.chat.llm.base import LLMClient, LLMMessage
 from app.features.chat.llm.deepseek import DeepSeekProvider
 from app.features.chat.model import Conversation, Message
@@ -108,15 +109,9 @@ class ChatService:
                 title=new_user_content[:20], conversation_id=conversation.id
             )
         await self.repository.add_message(new_db_user_message)
-        llm_messages = [
-            LLMMessage(role=msg.role, content=msg.content) for msg in history
-        ]
-        llm_messages.append(
-            LLMMessage(
-                role=new_db_user_message.role, content=new_db_user_message.content
-            )
-        )
-        return llm_messages
+        history = await self.repository.get_history_messages(conversation_id)
+        valid_messages = valid_context(history, -20)
+        return valid_messages
 
     async def start_new_chat(self, user_id: str) -> ConversationResponse:
         conversation = Conversation(id=str(uuid4()), user_id=user_id, title="新对话")
