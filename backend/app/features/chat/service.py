@@ -6,8 +6,6 @@ from uuid import uuid4
 from app.core.exceptions import AppException
 from app.features.chat.constant import MessageRole, MessageType
 from app.features.chat.context import valid_context
-from app.features.chat.llm.base import LLMClient, LLMMessage
-from app.features.chat.llm.deepseek import DeepSeekProvider
 from app.features.chat.model import Conversation, Message
 from app.features.chat.schema import (
     ConversationResponse,
@@ -20,6 +18,8 @@ from app.features.chat.schema import (
     StreamGenerateData,
     StreamResponse,
 )
+from app.integrations.llm.base import LLMClient, LLMMessage
+from app.integrations.llm.deepseek.client import DeepSeekProvider
 from openai.types.responses import ResponseErrorEvent
 
 if TYPE_CHECKING:
