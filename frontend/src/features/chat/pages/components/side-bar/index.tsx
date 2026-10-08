@@ -13,6 +13,7 @@ import styles from "./index.module.less";
 
 interface SideBarProps {
   history: ChatHistoryItem[];
+  isHistoryLoading: boolean;
   isCreatingConversation: boolean;
   onStartNewChat: () => void | Promise<void>;
 }
@@ -58,6 +59,11 @@ export function SideBar({
 
       <div className={styles.historySection}>
         <p className={styles.historyLabel}>最近</p>
+        isHistoryLoading && (
+          <div className={styles.historyLoading}>
+            <span>加载中...</span>
+          </div>
+        )
         {history &&
           history.map((item) => (
             <div

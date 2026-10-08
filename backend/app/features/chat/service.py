@@ -68,12 +68,17 @@ class ChatService:
                     data=to_stream_generate_data(chunk.delta),
                 )
             elif chunk.type == "error":
-                new_db_ai_message.content = full_content
+                failed_data = to_stream_failed_data(new_db_ai_message, chunk)
+                new_db_ai_message.content = failed_data.message.content
                 new_db_ai_message.status = MessageType.FAILED
-                await self.repository.update_message(new_db_ai_message)
+                new_db_ai_message.error_code = failed_data.error.error_code
+                new_db_ai_message.error_message = failed_data.error.error_message
+                await self.repository.update_message(
+                    new_db_ai_message,
+                )
                 yield StreamResponse(
                     type=MessageType.FAILED,
-                    data=to_stream_failed_data(new_db_ai_message, chunk),
+                    data=failed_data,
                 )
                 return
 

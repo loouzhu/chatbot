@@ -21,9 +21,8 @@ export function ChatPanel() {
     useStartNewChat();
   const { data: history = [], isLoading: isHistoryLoading } =
     useGetAllChatHistory();
-  const { data: conversationData } = useGetOneChatHistory(
-    conversation_id || "",
-  );
+  const { data: conversationData, isPending: isOneChatHistoryLoading } =
+    useGetOneChatHistory(conversation_id || "");
 
   const handleSubmit = async () => {
     const content = input.trim();
@@ -49,6 +48,7 @@ export function ChatPanel() {
     <main className={styles.chatPage}>
       <SideBar
         history={history}
+        isHistoryLoading={isHistoryLoading}
         isCreatingConversation={isCreatingConversation}
         onStartNewChat={handleStartNewChat}
       />
@@ -73,7 +73,7 @@ export function ChatPanel() {
 
         <ChatWindow
           messages={conversationData?.messages ?? []}
-          loading={isHistoryLoading}
+          loading={isOneChatHistoryLoading}
         />
         <ChatInput
           input={input}
