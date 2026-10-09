@@ -5,7 +5,7 @@ class AppException(Exception):
         code: str | None = None,
         status_code: int = 500,
     ):
+        super().__init__(message)
         self.message = message
         self.code = code
         self.status_code = status_code
-        super().__init__(message)

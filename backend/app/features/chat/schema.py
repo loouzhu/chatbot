@@ -1,7 +1,9 @@
 from datetime import datetime
+from typing import Optional
 
 from app.core.exceptions import AppException
 from app.features.chat.constant import MessageRole, MessageType
+from app.integrations.llm.base import LLMMessage
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -27,6 +29,25 @@ class MessageResponse(BaseModel):
     created_at: datetime
 
 
+# 输入token详情
+class InputTokensDetails(BaseModel):
+    cached_tokens: int
+
+
+# 输出token详情
+class OutputTokensDetails(BaseModel):
+    reasoning_tokens: int
+
+
+# token使用量模型
+class TokenUsage(BaseModel):
+    input_tokens: int
+    input_tokens_details: Optional[InputTokensDetails] = None
+    output_tokens: int
+    output_tokens_details: Optional[OutputTokensDetails] = None
+    total_tokens: int
+
+
 # 流式输出创建时data
 class StreamCreatedData(BaseModel):
     id: str
@@ -41,6 +62,7 @@ class StreamGenerateData(BaseModel):
 # 流式输出结束data
 class StreamDoneData(BaseModel):
     message: MessageResponse
+    usage: Optional[TokenUsage] = None
 
 
 # 流式输出失败data
@@ -71,3 +93,10 @@ class HistoryConversationResponse(BaseModel):
     id: str
     title: str
     created_at: datetime
+
+
+# 上下文信息模型
+class ContextInfo(BaseModel):
+    messages: list[LLMMessage]
+    used_token: int
+    rest_token: int

@@ -1,4 +1,5 @@
 from asyncio.log import logger
+
 from app.core.config import settings
 from app.core.exceptions import AppException
 from app.features.auth.router import auth_router

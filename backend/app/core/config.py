@@ -22,6 +22,8 @@ class Settings:
     REDIS_HOST: str
     REDIS_PORT: int
     FRONTEND_ORIGIN: str
+    DEEPSEEK_CONTEXT_WINDOW: int
+    DEEPSEEK_MAX_OUTPUT_LEN: int
 
 
 def get_settings() -> Settings:
@@ -31,6 +33,8 @@ def get_settings() -> Settings:
             os.getenv("DEEPSEEK_API_URL") or os.getenv("DEEPSEEK_BASE_URL", "")
         ).strip(),
         DEEPSEEK_MODEL=os.getenv("DEEPSEEK_MODEL", "deepseek-chat").strip(),
+        DEEPSEEK_CONTEXT_WINDOW=int(os.getenv("DEEPSEEK_CONTEXT_WINDOW", "1000000")),
+        DEEPSEEK_MAX_OUTPUT_LEN=int(os.getenv("DEEPSEEK_MAX_OUTPUT_LEN", "384000")),
         DATABASE_URL=os.getenv("DATABASE_URL", "").strip(),
         ALIBABA_CLOUD_ACCESS_KEY_ID=os.getenv(
             "ALIBABA_CLOUD_ACCESS_KEY_ID", ""

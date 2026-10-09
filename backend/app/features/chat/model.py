@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from app.db.base import Base
 from app.features.chat.constant import MessageRole, MessageType
-from sqlalchemy import DateTime, ForeignKey, String, Text, text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -50,6 +50,9 @@ class Message(Base):
     status: Mapped[MessageType] = mapped_column(
         String(20), nullable=False, default=MessageType.CREATED
     )
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    total_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error_code: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     error_message: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     content: Mapped[str] = mapped_column(Text, nullable=False)

@@ -1,3 +1,5 @@
+from typing import Literal, Optional
+
 from app.db.session import get_db
 from app.features.chat.model import Conversation, Message
 from app.features.chat.schema import HistoryConversationResponse
@@ -34,15 +36,19 @@ class ChatRepository:
         res = await self.db.execute(query)
         return res.scalar_one_or_none()
 
-    # 拿到当前对话的所有message
+    # 拿到当前对话的messages
     async def get_history_messages(
         self,
         conversation_id: str,
+        limit: Optional[int] = None,
+        order: Optional[Literal["asc", "desc"]] = "asc",
     ) -> list[Message]:
+        order_by = Message.created_at.asc() if order == "asc" else Message.created_at.desc()
         result = await self.db.execute(
             select(Message)
             .where(Message.conversation_id == conversation_id)
-            .order_by(Message.created_at)
+            .order_by(order_by)
+            .limit(limit)
         )
         return list(result.scalars().all())
 

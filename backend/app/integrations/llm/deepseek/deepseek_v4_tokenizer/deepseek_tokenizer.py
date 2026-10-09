@@ -10,5 +10,6 @@ tokenizer = transformers.AutoTokenizer.from_pretrained(
     chat_tokenizer_dir, trust_remote_code=True
 )
 
-result = tokenizer.encode("Hello!")
-print(result)
+
+def get_input_token(text: str) -> int:
+    return len(tokenizer.encode(text))

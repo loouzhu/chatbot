@@ -5,9 +5,10 @@ from uuid import uuid4
 
 from app.core.exceptions import AppException
 from app.features.chat.constant import MessageRole, MessageType
-from app.features.chat.context import valid_context
+from app.features.chat.context import valid_context_with_window
 from app.features.chat.model import Conversation, Message
 from app.features.chat.schema import (
+    ContextInfo,
     ConversationResponse,
     ErrorInfoResponse,
     HistoryConversationResponse,
@@ -17,10 +18,14 @@ from app.features.chat.schema import (
     StreamFailedData,
     StreamGenerateData,
     StreamResponse,
+    TokenUsage,
 )
-from app.integrations.llm.base import LLMClient, LLMMessage
+from app.integrations.llm.base import LLMClient, LLMException
 from app.integrations.llm.deepseek.client import DeepSeekProvider
-from openai.types.responses import ResponseErrorEvent
+from app.integrations.llm.deepseek.deepseek_v4_tokenizer.deepseek_tokenizer import (
+    get_input_token,
+)
+from openai.types.responses import ResponseErrorEvent, ResponseUsage
 
 if TYPE_CHECKING:
     from app.features.chat.repository import ChatRepository
@@ -37,7 +42,7 @@ class ChatService:
         conversation_id: str,
         user_id: str,
     ) -> AsyncIterator[StreamResponse]:
-        llm_messages = await self._prepare_messages(
+        context_info = await self._prepare_messages(
             new_user_content=new_user_content,
             conversation_id=conversation_id,
             user_id=user_id,
@@ -60,7 +65,7 @@ class ChatService:
         )
 
         full_content = new_db_ai_message.content
-        async for chunk in self.client.stream_chat(llm_messages):
+        async for chunk in self.client.stream_chat(context_info.messages):
             if chunk.type == "response.output_text.delta":
                 full_content += chunk.delta
                 yield StreamResponse(
@@ -81,21 +86,25 @@ class ChatService:
                     data=failed_data,
                 )
                 return
-
-        new_db_ai_message.content = full_content
-        new_db_ai_message.status = MessageType.COMPLETED
-        await self.repository.update_message(new_db_ai_message)
-        yield StreamResponse(
-            type=MessageType.COMPLETED,
-            data=to_stream_done_data(new_db_ai_message),
-        )
+            elif chunk.type == "response.completed":
+                usage = chunk.response.usage
+                new_db_ai_message.content = full_content
+                new_db_ai_message.status = MessageType.COMPLETED
+                new_db_ai_message.input_tokens = usage.input_tokens if usage else None
+                new_db_ai_message.output_tokens = usage.output_tokens if usage else None
+                new_db_ai_message.total_tokens = usage.total_tokens if usage else None
+                await self.repository.update_message(new_db_ai_message)
+                yield StreamResponse(
+                    type=MessageType.COMPLETED,
+                    data=to_stream_done_data(new_db_ai_message, usage),
+                )
 
     async def _prepare_messages(
         self,
         new_user_content: str,
         conversation_id: str,
         user_id: str,
-    ) -> list[LLMMessage]:
+    ) -> ContextInfo:
         conversation = await self.repository.get_conversation_by_id(conversation_id)
         if not conversation:
             raise AppException("没有找到该对话", "NOTFOUND", 404)
@@ -107,16 +116,28 @@ class ChatService:
             conversation_id=conversation_id,
             role=MessageRole.USER,
         )
-
+        token_limit = self.client.context_window - self.client.max_output_len
+        if get_input_token(new_user_content) > token_limit:
+            raise LLMException(
+                message="输入长度超过上下文限制",
+                code="OUT OF LIMIT",
+                model_name=self.client.model,
+                status_code=422,
+            )
         history = await self.repository.get_history_messages(conversation_id)
         if not history:
             await self.repository.set_title(
                 title=new_user_content[:20], conversation_id=conversation.id
             )
         await self.repository.add_message(new_db_user_message)
-        history = await self.repository.get_history_messages(conversation_id)
-        valid_messages = valid_context(history, -20)
-        return valid_messages
+        history = await self.repository.get_history_messages(
+            conversation_id=conversation_id, order="desc"
+        )
+        context_info = valid_context_with_window(
+            messages=history,
+            contextWindow=token_limit,
+        )
+        return context_info
 
     async def start_new_chat(self, user_id: str) -> ConversationResponse:
         conversation = Conversation(id=str(uuid4()), user_id=user_id, title="新对话")
@@ -183,8 +204,13 @@ def to_stream_generate_data(content: str) -> StreamGenerateData:
     return StreamGenerateData(content=content)
 
 
-def to_stream_done_data(message: Message) -> StreamDoneData:
-    return StreamDoneData(message=to_message_response(message))
+def to_stream_done_data(
+    message: Message, usage: ResponseUsage | None
+) -> StreamDoneData:
+    token_usage = (
+        TokenUsage.model_validate(usage.model_dump()) if usage is not None else None
+    )
+    return StreamDoneData(message=to_message_response(message), usage=token_usage)
 
 
 def to_stream_failed_data(
