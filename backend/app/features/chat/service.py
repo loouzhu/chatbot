@@ -174,6 +174,18 @@ class ChatService:
             raise AppException("无权访问该对话", "UNAUTHORIZED", 401)
         return await self.repository.delete_conversation(conversation_id)
 
+    async def stop_request_message(
+        self, user_id: str, message_id: str, conversation_id: str
+    ):
+        message = await self.repository.find_message(conversation_id, message_id)
+        conversation = await self.repository.get_conversation_by_id(conversation_id)
+        if not conversation:
+            raise AppException("未找到对话", "NOT_FOUND", 404)
+        if conversation.user_id != user_id:
+            raise AppException("无权访问该对话", "UNAUTHORIZED", 401)
+        if not message:
+            raise AppException("未找到消息", "NOT_FOUND", 404)
+
 
 def to_db_message(
     content: str, conversation_id: str, status: MessageType, role: MessageRole
