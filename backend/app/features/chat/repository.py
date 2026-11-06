@@ -43,7 +43,9 @@ class ChatRepository:
         limit: Optional[int] = None,
         order: Optional[Literal["asc", "desc"]] = "asc",
     ) -> list[Message]:
-        order_by = Message.created_at.asc() if order == "asc" else Message.created_at.desc()
+        order_by = (
+            Message.created_at.asc() if order == "asc" else Message.created_at.desc()
+        )
         result = await self.db.execute(
             select(Message)
             .where(Message.conversation_id == conversation_id)
@@ -88,3 +90,12 @@ class ChatRepository:
         )
         await self.db.commit()
         return result.rowcount > 0  # type: ignore
+
+    # 查找一条message
+    async def find_message(self, conversation_id: str, message_id: str):
+        result = await self.db.execute(
+            select(Message).where(
+                Message.id == message_id, Message.conversation_id == conversation_id
+            )
+        )
+        return result.scalar_one_or_none()
