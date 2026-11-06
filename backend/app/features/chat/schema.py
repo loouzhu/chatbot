@@ -76,10 +76,21 @@ class StreamFailedData(BaseModel):
     error: ErrorInfoResponse
 
 
+# 流式输出取消data
+class StreamCanceledData(BaseModel):
+    message: MessageResponse
+
+
 # 流式输出消息模型
 class StreamResponse(BaseModel):
     type: MessageType
-    data: StreamCreatedData | StreamGenerateData | StreamDoneData | StreamFailedData
+    data: (
+        StreamCreatedData
+        | StreamGenerateData
+        | StreamDoneData
+        | StreamFailedData
+        | StreamCanceledData
+    )
 
 
 # 对话模型
@@ -100,3 +111,8 @@ class ContextInfo(BaseModel):
     messages: list[LLMMessage]
     used_token: int
     rest_token: int
+
+
+# 上游中断异常
+class UpstreamStreamInterrupted(Exception):
+    pass

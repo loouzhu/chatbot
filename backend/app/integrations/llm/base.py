@@ -96,6 +96,8 @@ class LLMProvider:
                 model_name=self.model,
                 status_code=500,
             )
-
-        async for chunk in stream:
-            yield chunk
+        try:
+            async for chunk in stream:
+                yield chunk
+        finally:
+            await stream.close()
