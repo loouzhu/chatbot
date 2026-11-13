@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from app.db.base import Base
-from app.features.chat.constant import MessageRole, MessageType
+from app.features.chat.constant import MessageRole, MessageStatus
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -47,8 +47,8 @@ class Message(Base):
     role: Mapped[MessageRole] = mapped_column(
         String(20), nullable=False, default=MessageRole.USER
     )
-    status: Mapped[MessageType] = mapped_column(
-        String(20), nullable=False, default=MessageType.CREATED
+    status: Mapped[MessageStatus] = mapped_column(
+        String(20), nullable=False, default=MessageStatus.CREATED
     )
     input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)

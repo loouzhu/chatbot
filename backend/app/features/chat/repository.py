@@ -7,6 +7,11 @@ from fastapi import Depends
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.app.features.chat.constant import (
+    MessageActiveStatus,
+    MessageTerminalStatus,
+)
+
 
 class ChatRepository:
     def __init__(self, db: AsyncSession = Depends(get_db)):
@@ -21,8 +26,34 @@ class ChatRepository:
 
     # 更新一条Message
     async def update_message(self, message: Message):
+        exist_message = await self.find_message(
+            conversation_id=message.conversation_id,
+            message_id=message.id,
+        )
+        if exist_message is None:
+            raise ValueError("消息不存在")
+
+        query = (
+            update(Message)
+            .where(
+                Message.id == message.id,
+                Message.conversation_id == message.conversation_id,
+                Message.status.in_(MessageActiveStatus),
+            )
+            .values(
+                content=message.content,
+                status=message.status,
+                error_code=message.error_code,
+                error_message=message.error_message,
+                input_tokens=message.input_tokens,
+                output_tokens=message.output_tokens,
+                total_tokens=message.total_tokens,
+            )
+        )
+        await self.db.execute(query)
         await self.db.commit()
-        await self.db.refresh(message)
+        await self.db.refresh(exist_message)
+        return exist_message
 
     # 添加一条Conversation
     async def add_conversation(self, conversation: Conversation):

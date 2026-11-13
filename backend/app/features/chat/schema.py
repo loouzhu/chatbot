@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from app.core.exceptions import AppException
-from app.features.chat.constant import MessageRole, MessageType
+from app.features.chat.constant import MessageRole, MessageStatus
 from app.integrations.llm.base import LLMMessage
 from pydantic import BaseModel, Field, field_validator
 
@@ -83,7 +83,7 @@ class StreamCanceledData(BaseModel):
 
 # 流式输出消息模型
 class StreamResponse(BaseModel):
-    type: MessageType
+    type: MessageStatus
     data: (
         StreamCreatedData
         | StreamGenerateData

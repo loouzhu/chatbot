@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from app.core.exceptions import AppException
-from app.features.chat.constant import MessageRole, MessageType
+from app.features.chat.constant import MessageRole, MessageStatus
 from app.features.chat.context import valid_context_with_window
 from app.features.chat.model import Conversation, Message
 from app.features.chat.schema import (
@@ -34,6 +34,8 @@ from openai.types.responses import ResponseErrorEvent, ResponseUsage
 if TYPE_CHECKING:
     from app.features.chat.repository import ChatRepository
 
+from app.features.chat.generation_registry import generation_registry
+
 
 class ChatService:
     def __init__(self, repository: "ChatRepository", client: LLMClient | None = None):
@@ -55,45 +57,51 @@ class ChatService:
         new_db_ai_message = to_db_message(
             content="",
             conversation_id=conversation_id,
-            status=MessageType.CREATED,
+            status=MessageStatus.CREATED,
             role=MessageRole.ASSISTANT,
         )
         new_db_ai_message = await self.repository.add_message(new_db_ai_message)
         message_id = new_db_ai_message.id
-        yield StreamResponse(
-            type=MessageType.CREATED,
-            data=to_stream_created_data(
-                message_id,
-                new_db_ai_message.role,
-            ),
-        )
-
+        task = asyncio.current_task()
+        if task is None:
+            raise RuntimeError("当前没有正在运行的 asyncio 任务")
+        generation_registry.register_task(message_id, task)
         full_content = new_db_ai_message.content
-        terminal_saved = False
         try:
+            yield StreamResponse(
+                type=MessageStatus.CREATED,
+                data=to_stream_created_data(
+                    message_id,
+                    new_db_ai_message.role,
+                ),
+            )
+
+            terminal_saved = False
+            generation_started = False
             async with aclosing(
                 self.client.stream_chat(context_info.messages)  # type: ignore
             ) as chunks:
                 async for chunk in chunks:
                     if chunk.type == "response.output_text.delta":
                         full_content += chunk.delta
-                        if chunk.sequence_number == 0:
+                        if not generation_started:
                             new_db_ai_message = to_db_message(
                                 id=message_id,
                                 content=full_content,
                                 conversation_id=conversation_id,
-                                status=MessageType.GENERATING,
+                                status=MessageStatus.GENERATING,
                                 role=MessageRole.ASSISTANT,
                             )
                             await self.repository.update_message(new_db_ai_message)
+                            generation_started = True
                         yield StreamResponse(
-                            type=MessageType.GENERATING,
+                            type=MessageStatus.GENERATING,
                             data=to_stream_generate_data(chunk.delta),
                         )
                     elif chunk.type == "error":
                         failed_data = to_stream_failed_data(new_db_ai_message, chunk)
-                        new_db_ai_message.content = failed_data.message.content
-                        new_db_ai_message.status = MessageType.FAILED
+                        new_db_ai_message.content = full_content
+                        new_db_ai_message.status = MessageStatus.FAILED
                         new_db_ai_message.error_code = failed_data.error.error_code
                         new_db_ai_message.error_message = (
                             failed_data.error.error_message
@@ -102,14 +110,14 @@ class ChatService:
                             new_db_ai_message,
                         )
                         yield StreamResponse(
-                            type=MessageType.FAILED,
+                            type=MessageStatus.FAILED,
                             data=failed_data,
                         )
                         return
                     elif chunk.type == "response.completed":
                         usage = chunk.response.usage
                         new_db_ai_message.content = full_content
-                        new_db_ai_message.status = MessageType.COMPLETED
+                        new_db_ai_message.status = MessageStatus.COMPLETED
                         new_db_ai_message.input_tokens = (
                             usage.input_tokens if usage else None
                         )
@@ -122,7 +130,7 @@ class ChatService:
                         await self.repository.update_message(new_db_ai_message)
                         terminal_saved = True
                         yield StreamResponse(
-                            type=MessageType.COMPLETED,
+                            type=MessageStatus.COMPLETED,
                             data=to_stream_done_data(new_db_ai_message, usage),
                         )
                         return
@@ -194,6 +202,9 @@ class ChatService:
             yield event
             return
 
+        finally:
+            generation_registry.unregister_task(message_id, task)
+
     async def _prepare_messages(
         self,
         new_user_content: str,
@@ -207,7 +218,7 @@ class ChatService:
             raise AppException("无权访问该对话", "UNAUTHORIZED", 403)
         new_db_user_message = to_db_message(
             content=new_user_content,
-            status=MessageType.COMPLETED,
+            status=MessageStatus.COMPLETED,
             conversation_id=conversation_id,
             role=MessageRole.USER,
         )
@@ -277,22 +288,23 @@ class ChatService:
         error_code: str,
         error_message: str,
     ):
-        new_db_ai_message = to_db_message(
+        db_ai_message = to_db_message(
             id=id,
             content=content,
             conversation_id=conversation_id,
-            status=MessageType.FAILED,
+            status=MessageStatus.FAILED,
             role=MessageRole.ASSISTANT,
             error_code=error_code,
             error_message=error_message,
         )
-        await self.repository.update_message(new_db_ai_message)
-        message_response = to_message_response(new_db_ai_message)
+        updated_message = await self.repository.update_message(db_ai_message)
+        message_response = to_message_response(updated_message)
         error_response = ErrorInfoResponse(
-            error_code=error_code, error_message=error_message
+            error_code=error_code,
+            error_message=error_message,
         )
         return StreamResponse(
-            type=MessageType.FAILED,
+            type=MessageStatus.FAILED,
             data=StreamFailedData(message=message_response, error=error_response),
         )
 
@@ -306,7 +318,7 @@ class ChatService:
             id=id,
             content=content,
             conversation_id=conversation_id,
-            status=MessageType.CANCELLED,
+            status=MessageStatus.CANCELLED,
             role=MessageRole.ASSISTANT,
         )
         await self.repository.update_message(new_db_ai_message)
@@ -322,12 +334,13 @@ class ChatService:
             raise AppException("无权访问该对话", "UNAUTHORIZED", 401)
         if not message:
             raise AppException("未找到消息", "NOT_FOUND", 404)
+        generation_registry.cancel_task(message_id)
 
 
 def to_db_message(
     content: str,
     conversation_id: str,
-    status: MessageType,
+    status: MessageStatus,
     role: MessageRole,
     error_message: str = "",
     error_code: str = "",

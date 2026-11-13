@@ -1,4 +1,4 @@
-from app.features.chat.constant import MessageType
+from app.features.chat.constant import MessageStatus
 from app.features.chat.model import Message
 from app.features.chat.schema import ContextInfo
 from app.integrations.llm.base import LLMMessage
@@ -11,7 +11,7 @@ def valid_context(messages: list[Message], start: int = 0) -> list[LLMMessage]:
     return [
         LLMMessage(role=message.role, content=message.content)
         for message in messages[start:]
-        if message.status == MessageType.COMPLETED
+        if message.status == MessageStatus.COMPLETED
     ]
 
 
@@ -24,7 +24,7 @@ def valid_context_with_window(
     used_token = 0
     included_message = []
     for message in messages:
-        if message.status != MessageType.COMPLETED:
+        if message.status != MessageStatus.COMPLETED:
             continue
         curr_message_token = get_input_token(message.content)
         if used_token + curr_message_token > contextWindow:
