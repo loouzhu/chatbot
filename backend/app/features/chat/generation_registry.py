@@ -30,7 +30,12 @@ class GenerationRegistry:
             raise AttributeError(f"消息{message_id}不存在")
         if not exist_task.done():
             exist_task.cancel()
-        await asyncio.gather(exist_task, return_exceptions=True)
+        results = await asyncio.gather(exist_task, return_exceptions=True)
+        result = results[0]
+        if isinstance(result, asyncio.CancelledError):
+            return
+        if isinstance(result, BaseException):
+            raise result
 
 
 generation_registry = GenerationRegistry()

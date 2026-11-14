@@ -28,6 +28,7 @@ interface ActiveChatStream {
   conversationId: string;
   messageId: string | null;
   stopPromise?: Promise<void>;
+  stopping?: boolean;
 }
 
 // 统一管理流式消息的发送和中断
@@ -135,7 +136,7 @@ export const useChatStream = () => {
         );
       } catch (error) {
         // 主动中断保留已生成的内容，不触发发送失败回滚。
-        if (!stream.controller.signal.aborted) throw error;
+        if (!stream.stopping && !stream.controller.signal.aborted) throw error;
       }
     },
     onMutate: async (request: SendMessageRequest) => {
@@ -194,8 +195,8 @@ export const useChatStream = () => {
 
   const stopGenerateMessage = async () => {
     const stream = activeStream.current;
-    if (!stream || stream.controller.signal.aborted) return;
-
+    if (!stream || stream.stopping || stream.controller.signal.aborted) return;
+    stream.stopping = true;
     stream.stopPromise = (
       stream.messageId
         ? chatApi.stopGenerateMessage(stream.conversationId, stream.messageId)
@@ -203,6 +204,7 @@ export const useChatStream = () => {
     ).catch((error: unknown) => {
       messageApi.error(getErrorMessage(error));
     });
+    await stream.stopPromise;
     stream.controller.abort();
 
     queryClient.setQueryData<Conversation>(
@@ -220,7 +222,6 @@ export const useChatStream = () => {
         };
       },
     );
-    await stream.stopPromise;
   };
 
   return {

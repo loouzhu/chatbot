@@ -104,8 +104,8 @@ class ChatService:
                     elif chunk.type == "error":
                         new_db_ai_message.content = full_content
                         new_db_ai_message.status = MessageStatus.FAILED
-                        new_db_ai_message.error_code = chunk.error_code
-                        new_db_ai_message.error_message = chunk.error_message
+                        new_db_ai_message.error_code = chunk.code
+                        new_db_ai_message.error_message = chunk.message
                         new_db_ai_message = await self.repository.update_message(
                             new_db_ai_message,
                         )
@@ -408,7 +408,8 @@ def to_stream_failed_data(
     return StreamFailedData(
         message=to_message_response(message),
         error=ErrorInfoResponse(
-            error_code=chunk.code or "UNKNOWN ERROR", error_message=chunk.message
+            error_code=chunk.code or "UNKNOWN ERROR",
+            error_message=chunk.message,
         ),
     )
 
