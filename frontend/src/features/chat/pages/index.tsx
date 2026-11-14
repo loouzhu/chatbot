@@ -2,7 +2,7 @@ import { PlusOutlined, RobotOutlined } from "@ant-design/icons";
 import { Button } from "antd";
 import { useParams } from "react-router-dom";
 import {
-  useStreamMessage,
+  useChatStreamHook,
   useInput,
   useStartNewChat,
   useGetAllChatHistory,
@@ -16,7 +16,7 @@ import { SideBar } from "./components/side-bar";
 export function ChatPanel() {
   const { conversation_id } = useParams();
   const { input, setInput } = useInput();
-  const { mutateAsync: sendStreamMessage, isPending } = useStreamMessage();
+  const { sendStreamMessage, stopGenerateMessage, isPending } = useChatStreamHook();
   const { mutateAsync: startNewChat, isPending: isCreatingConversation } =
     useStartNewChat();
   const { data: history = [], isLoading: isHistoryLoading } =
@@ -80,6 +80,7 @@ export function ChatPanel() {
           loading={isPending}
           onInputChange={setInput}
           onSubmit={handleSubmit}
+          onStop={stopGenerateMessage}
         />
       </section>
     </main>

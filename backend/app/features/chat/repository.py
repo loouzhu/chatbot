@@ -1,16 +1,12 @@
 from typing import Literal, Optional
 
 from app.db.session import get_db
+from app.features.chat.constant import MessageActiveStatus, MessageTerminalStatus
 from app.features.chat.model import Conversation, Message
 from app.features.chat.schema import HistoryConversationResponse
 from fastapi import Depends
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from backend.app.features.chat.constant import (
-    MessageActiveStatus,
-    MessageTerminalStatus,
-)
 
 
 class ChatRepository:
@@ -30,14 +26,21 @@ class ChatRepository:
             conversation_id=message.conversation_id,
             message_id=message.id,
         )
+
         if exist_message is None:
             raise ValueError("消息不存在")
+
+        if (
+            exist_message.status in MessageTerminalStatus
+            and message.status != exist_message.status
+        ):
+            raise ValueError("终态不能修改")
 
         query = (
             update(Message)
             .where(
-                Message.id == message.id,
                 Message.conversation_id == message.conversation_id,
+                Message.id == message.id,
                 Message.status.in_(MessageActiveStatus),
             )
             .values(

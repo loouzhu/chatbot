@@ -6,6 +6,7 @@ from app.features.chat.schema import (
     ConversationResponse,
     HistoryConversationResponse,
     MessageRequest,
+    StopRequest,
 )
 from app.features.chat.service import ChatService
 from fastapi import APIRouter, Depends
@@ -17,6 +18,7 @@ chat_router = APIRouter(prefix="/chat", tags=["Chat"])
 
 async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
     return ChatService(ChatRepository(db))
+
 
 # 开始新对话
 @chat_router.post("/start_new_chat", response_model=ConversationResponse)
@@ -47,6 +49,7 @@ async def request_message(
         media_type="text/event-stream",
     )
 
+
 # 获取所有历史对话
 @chat_router.get("/history/all", response_model=list[HistoryConversationResponse])
 async def all_conversation_history(
@@ -54,6 +57,7 @@ async def all_conversation_history(
     service: ChatService = Depends(get_chat_service),
 ):
     return await service.get_all_history_conversations(user.id)
+
 
 # 获取某一条历史对话
 @chat_router.get("/history/{conversation_id}")
@@ -64,6 +68,7 @@ async def single_conversation_history(
 ):
     return await service.get_single_conversation_history(user.id, conversation_id)
 
+
 # 删除一条历史对话
 @chat_router.delete("/delete_conversation")
 async def delete_conversation(
@@ -73,12 +78,13 @@ async def delete_conversation(
 ):
     await service.delete_conversation(user.id, conversation_id)
 
+
 # 停止生成回答
-@chat_router.post('/stop_request_message/{message_id}')
+@chat_router.post("/stop_request_message/{conversation_id}")
 async def stop_request_message(
-    message_id:str,
     conversation_id: str,
-    user:User = Depends(get_current_user),
+    body: StopRequest,
+    user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
 ):
-    await service.stop_request_message(user.id,message_id,conversation_id)
+    await service.stop_request_message(user.id, body.message_id, conversation_id)

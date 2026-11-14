@@ -1,5 +1,9 @@
 import type { KeyboardEvent } from "react";
-import { ArrowUpOutlined, PaperClipOutlined } from "@ant-design/icons";
+import {
+  ArrowUpOutlined,
+  PaperClipOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
 import { Button, Input } from "antd";
 import styles from "./index.module.less";
 
@@ -8,6 +12,7 @@ interface ChatInputProps {
   loading: boolean;
   onInputChange: (value: string) => void;
   onSubmit: () => void | Promise<void>;
+  onStop: () => void | Promise<void>;
 }
 
 export function ChatInput({
@@ -15,6 +20,7 @@ export function ChatInput({
   loading,
   onInputChange,
   onSubmit,
+  onStop,
 }: ChatInputProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (
@@ -60,11 +66,12 @@ export function ChatInput({
           <Button
             className={styles.sendButton}
             type="primary"
-            htmlType="submit"
-            icon={<ArrowUpOutlined />}
-            disabled={loading || !input.trim()}
-            aria-label="发送消息"
-            title="发送消息"
+            htmlType={loading ? "button" : "submit"}
+            icon={loading ? <StopOutlined /> : <ArrowUpOutlined />}
+            disabled={!loading && !input.trim()}
+            onClick={loading ? () => void onStop() : undefined}
+            aria-label={loading ? "停止生成" : "发送消息"}
+            title={loading ? "停止生成" : "发送消息"}
           />
         </div>
       </form>

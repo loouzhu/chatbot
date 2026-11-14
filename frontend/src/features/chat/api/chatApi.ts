@@ -16,18 +16,19 @@ export const chatApi = {
   async sendStreamMessage(
     request: SendMessageRequest,
     onEvent: (event: StreamResponse) => void,
+    signal?: AbortSignal,
   ): Promise<void> {
     const token = window.localStorage.getItem("token");
     const headers = new Headers({
       "Content-Type": "application/json",
     });
     if (token) headers.set("Authorization", `Bearer ${token}`);
-
     const response = await fetch(`${API_BASE_URL}/chat/request_message`, {
       method: "POST",
       credentials: "include",
       headers,
       body: JSON.stringify(request),
+      signal,
     });
 
     if (!response.ok) {
@@ -81,6 +82,15 @@ export const chatApi = {
   async getOneChatHistory(conversationId: string): Promise<Conversation> {
     return request(`/chat/history/${conversationId}`, {
       method: "GET",
+      auth: true,
+    });
+  },
+
+  // 停止生成本次消息
+  async stopGenerateMessage(conversationId: string, messageId: string) {
+    return request<void>(`/chat/stop_request_message/${conversationId}`, {
+      method: "POST",
+      body: { message_id: messageId },
       auth: true,
     });
   },

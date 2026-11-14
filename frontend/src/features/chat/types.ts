@@ -37,6 +37,10 @@ export type StreamResponse =
   | {
       type: "failed";
       data: StreamFailedData;
+    }
+  | {
+      type: "cancelled";
+      data: StreamCancelledData;
     };
 
 export interface StreamCreatedData {
@@ -55,6 +59,10 @@ export interface StreamDoneData {
 export interface StreamFailedData {
   message: ChatMessage;
   error: MessageError;
+}
+
+export interface StreamCancelledData {
+  message: ChatMessage;
 }
 
 export interface Conversation {

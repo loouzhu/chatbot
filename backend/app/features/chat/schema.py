@@ -25,8 +25,11 @@ class MessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     id: str
     role: MessageRole
+    status: MessageStatus
     content: str
     created_at: datetime
+    error_code: str = ""
+    error_message: str = ""
 
 
 # 输入token详情
@@ -116,3 +119,8 @@ class ContextInfo(BaseModel):
 # 上游中断异常
 class UpstreamStreamInterrupted(Exception):
     pass
+
+
+# 中断当前对话请求体
+class StopRequest(BaseModel):
+    message_id: str

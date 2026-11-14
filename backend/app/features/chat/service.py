@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from asyncio.log import logger
 from collections.abc import AsyncIterator
 from contextlib import aclosing
 from typing import TYPE_CHECKING
@@ -92,23 +93,23 @@ class ChatService:
                                 status=MessageStatus.GENERATING,
                                 role=MessageRole.ASSISTANT,
                             )
-                            await self.repository.update_message(new_db_ai_message)
+                            new_db_ai_message = await self.repository.update_message(
+                                new_db_ai_message
+                            )
                             generation_started = True
                         yield StreamResponse(
                             type=MessageStatus.GENERATING,
                             data=to_stream_generate_data(chunk.delta),
                         )
                     elif chunk.type == "error":
-                        failed_data = to_stream_failed_data(new_db_ai_message, chunk)
                         new_db_ai_message.content = full_content
                         new_db_ai_message.status = MessageStatus.FAILED
-                        new_db_ai_message.error_code = failed_data.error.error_code
-                        new_db_ai_message.error_message = (
-                            failed_data.error.error_message
-                        )
-                        await self.repository.update_message(
+                        new_db_ai_message.error_code = chunk.error_code
+                        new_db_ai_message.error_message = chunk.error_message
+                        new_db_ai_message = await self.repository.update_message(
                             new_db_ai_message,
                         )
+                        failed_data = to_stream_failed_data(new_db_ai_message, chunk)
                         yield StreamResponse(
                             type=MessageStatus.FAILED,
                             data=failed_data,
@@ -127,7 +128,9 @@ class ChatService:
                         new_db_ai_message.total_tokens = (
                             usage.total_tokens if usage else None
                         )
-                        await self.repository.update_message(new_db_ai_message)
+                        new_db_ai_message = await self.repository.update_message(
+                            new_db_ai_message
+                        )
                         terminal_saved = True
                         yield StreamResponse(
                             type=MessageStatus.COMPLETED,
@@ -321,20 +324,33 @@ class ChatService:
             status=MessageStatus.CANCELLED,
             role=MessageRole.ASSISTANT,
         )
-        await self.repository.update_message(new_db_ai_message)
+        max_tries = 4
+        for attempt in range(max_tries):
+            try:
+                await self.repository.update_message(new_db_ai_message)
+                return
+            except Exception:
+                if attempt == max_tries - 1:
+                    logger.exception(f"消息取消状态保存失败，已达到最大重试次数: {id}")
+                    raise
+                delay = 0.5 * attempt**2
+                await asyncio.sleep(delay)
 
     async def stop_request_message(
-        self, user_id: str, message_id: str, conversation_id: str
+        self,
+        user_id: str,
+        message_id: str,
+        conversation_id: str,
     ):
-        message = await self.repository.find_message(conversation_id, message_id)
         conversation = await self.repository.get_conversation_by_id(conversation_id)
         if not conversation:
             raise AppException("未找到对话", "NOT_FOUND", 404)
         if conversation.user_id != user_id:
             raise AppException("无权访问该对话", "UNAUTHORIZED", 401)
+        message = await self.repository.find_message(conversation_id, message_id)
         if not message:
             raise AppException("未找到消息", "NOT_FOUND", 404)
-        generation_registry.cancel_task(message_id)
+        await generation_registry.cancel_and_wait(message_id)
 
 
 def to_db_message(
@@ -361,8 +377,11 @@ def to_message_response(message: Message) -> MessageResponse:
     return MessageResponse(
         id=message.id,
         role=message.role,
+        status=message.status,
         content=message.content,
         created_at=message.created_at,
+        error_code=message.error_code,
+        error_message=message.error_message,
     )
 
 
