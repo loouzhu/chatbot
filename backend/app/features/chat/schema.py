@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Optional
 
+from pydantic import BaseModel, Field, field_validator
+
 from app.core.exceptions import AppException
 from app.features.chat.constant import MessageRole, MessageStatus
 from app.integrations.llm.base import LLMMessage
-from pydantic import BaseModel, Field, field_validator
 
 
 # 输入消息模型

@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from app.db.base import Base
-from app.features.chat.constant import MessageRole, MessageStatus
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.db.base import Base
+from app.features.chat.constant import MessageRole, MessageStatus
 
 if TYPE_CHECKING:
     from app.features.auth.model import User

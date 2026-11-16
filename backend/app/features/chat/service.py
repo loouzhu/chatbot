@@ -6,6 +6,9 @@ from contextlib import aclosing
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
+from openai import APIConnectionError, APIStatusError, APITimeoutError
+from openai.types.responses import ResponseErrorEvent, ResponseUsage
+
 from app.core.exceptions import AppException
 from app.features.chat.constant import MessageRole, MessageStatus
 from app.features.chat.context import valid_context_with_window
@@ -29,8 +32,6 @@ from app.integrations.llm.deepseek.client import DeepSeekProvider
 from app.integrations.llm.deepseek.deepseek_v4_tokenizer.deepseek_tokenizer import (
     get_input_token,
 )
-from openai import APIConnectionError, APIStatusError, APITimeoutError
-from openai.types.responses import ResponseErrorEvent, ResponseUsage
 
 if TYPE_CHECKING:
     from app.features.chat.repository import ChatRepository
