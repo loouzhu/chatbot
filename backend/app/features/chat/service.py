@@ -97,9 +97,7 @@ class ChatService:
             await lifecycle.cancel(message, full_content)
             raise
         except GenerationError as error:
-            yield await lifecycle.fail(
-                message, full_content, error.code, error.message
-            )
+            yield await lifecycle.fail(message, full_content, error.code, error.message)
         except UpstreamStreamInterrupted:
             yield await lifecycle.fail(
                 message,

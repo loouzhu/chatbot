@@ -1,12 +1,11 @@
 from collections.abc import AsyncGenerator
 from typing import Protocol, cast
 
+from app.core.exceptions import AppException
+from app.features.chat.constant import MessageRole
 from openai import AsyncOpenAI
 from openai.types.responses import ResponseInputItemParam, ResponseStreamEvent
 from pydantic import BaseModel
-
-from app.core.exceptions import AppException
-from app.features.chat.constant import MessageRole
 
 
 class LLMMessage(BaseModel):
@@ -35,6 +34,8 @@ class LLMClient(Protocol):
     def stream_chat(
         self, messages: list[LLMMessage]
     ) -> AsyncGenerator[ResponseStreamEvent, None]: ...
+
+    async def chat_compress(self, messages: list[LLMMessage]) -> list[LLMMessage]: ...
 
 
 def to_openai_messages(messages: list[LLMMessage]) -> list[ResponseInputItemParam]:
@@ -102,3 +103,38 @@ class LLMProvider:
                 yield chunk
         finally:
             await stream.close()
+
+    async def chat_compress(self, messages: list[LLMMessage]) -> list[LLMMessage]:
+        client = AsyncOpenAI(
+            api_key=self.api_key,
+            base_url=self.api_url,
+        )
+        message_length = len(messages)
+        if message_length <= 20:
+            return messages
+        old_messages = messages[:-20]
+        mid_messages = messages[-20:-6]
+        recent_messages = messages[-6:]
+
+        old_compress_res = await client.responses.create(
+            model=self.model,
+            input=to_openai_messages(old_messages),
+            instructions="提取以下对话中的关键事实（每条一行，最多5条）",
+        )
+
+        mid_compress_res = await client.responses.create(
+            model=self.model,
+            input=to_openai_messages(mid_messages),
+            instructions="用3句话总结这些文本",
+        )
+        return [
+            LLMMessage(
+                role=MessageRole.ASSISTANT,
+                content=old_compress_res.output_text,
+            ),
+            LLMMessage(
+                role=MessageRole.ASSISTANT,
+                content=mid_compress_res.output_text,
+            ),
+            *recent_messages,
+        ]
