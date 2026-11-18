@@ -1,3 +1,7 @@
+from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.session import get_db
 from app.features.auth.dependence import get_current_user
 from app.features.auth.model import User
@@ -9,9 +13,6 @@ from app.features.chat.schema import (
     StopRequest,
 )
 from app.features.chat.service import ChatService
-from fastapi import APIRouter, Depends
-from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 chat_router = APIRouter(prefix="/chat", tags=["Chat"])
 

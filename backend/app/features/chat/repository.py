@@ -1,12 +1,13 @@
 from typing import Literal, Optional
 
+from fastapi import Depends
+from sqlalchemy import delete, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.session import get_db
 from app.features.chat.constant import MessageActiveStatus, MessageTerminalStatus
 from app.features.chat.model import Conversation, Message
 from app.features.chat.schema import HistoryConversationResponse
-from fastapi import Depends
-from sqlalchemy import delete, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class ChatRepository:
