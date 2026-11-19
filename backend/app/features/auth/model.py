@@ -2,13 +2,14 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 from uuid import uuid4
 
-from app.db.base import Base
 from sqlalchemy import DateTime, ForeignKey, String, text
 from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.db.base import Base
+
 if TYPE_CHECKING:
-    from app.features.chat.model import Conversation
+    from app.features.chat.model import Conversation, Memory
 
 
 # 用户表
@@ -43,6 +44,10 @@ class User(Base):
         cascade="all, delete-orphan",
     )
     conversations: Mapped[list["Conversation"]] = relationship(  # 使用字符串
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    memories: Mapped[list["Memory"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )

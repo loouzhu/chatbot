@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import AsyncIterator
 from contextlib import aclosing
 from typing import TYPE_CHECKING
@@ -6,7 +7,7 @@ from uuid import uuid4
 
 from app.core.exceptions import AppException
 from app.features.chat.constant import MessageRole, MessageStatus
-from app.features.chat.context import valid_context_with_window
+from app.features.chat.context import valid_context, valid_context_with_window
 from app.features.chat.llm_events import (
     Completed,
     Delta,
@@ -29,7 +30,8 @@ from app.features.chat.schema import (
     StreamResponse,
     UpstreamStreamInterrupted,
 )
-from app.integrations.llm.base import LLMClient, LLMException
+from app.features.chat.utils import require_conversation_access
+from app.integrations.llm.base import LLMClient, LLMException, LLMMessage
 from app.integrations.llm.deepseek.client import DeepSeekProvider
 from app.integrations.llm.deepseek.deepseek_v4_tokenizer.deepseek_tokenizer import (
     get_input_token,
@@ -39,6 +41,11 @@ if TYPE_CHECKING:
     from app.features.chat.repository import ChatRepository
 
 from app.features.chat.generation_registry import generation_registry
+
+logger = logging.getLogger(__name__)
+# Cap the trigger so very large configured context windows still get summaries.
+SUMMARY_TRIGGER_TOKENS = 8192
+SUMMARY_BATCH_TOKENS = 4096
 
 
 class ChatService:
@@ -66,6 +73,7 @@ class ChatService:
             raise RuntimeError("当前没有正在运行的 asyncio 任务")
         generation_registry.register_task(message_id, task)
         full_content = message.content
+        response_completed = False
         try:
             yield created_event(message)
             generation_started = False
@@ -87,14 +95,23 @@ class ChatService:
                         )
                         return
                     elif isinstance(event, Completed):
-                        yield await lifecycle.complete(
+                        completed_event = await lifecycle.complete(
                             message, full_content, event.usage
                         )
+                        response_completed = True
+                        yield completed_event
+                        # try:
+                        #     await self.update_summary(user_id, conversation_id)
+                        # except Exception:
+                        #     logger.exception(
+                        #         "更新对话摘要失败: %s", conversation_id
+                        #     )
                         return
 
             raise UpstreamStreamInterrupted()
         except asyncio.CancelledError:
-            await lifecycle.cancel(message, full_content)
+            if not response_completed:
+                await lifecycle.cancel(message, full_content)
             raise
         except GenerationError as error:
             yield await lifecycle.fail(message, full_content, error.code, error.message)
@@ -121,11 +138,9 @@ class ChatService:
         conversation_id: str,
         user_id: str,
     ) -> ContextInfo:
-        conversation = await self.repository.get_conversation_by_id(conversation_id)
-        if not conversation:
-            raise AppException("没有找到该对话", "NOTFOUND", 404)
-        if conversation.user_id != user_id:
-            raise AppException("无权访问该对话", "UNAUTHORIZED", 403)
+        conversation = await require_conversation_access(
+            user_id, conversation_id, self.repository
+        )
         new_db_user_message = to_db_message(
             content=new_user_content,
             status=MessageStatus.COMPLETED,
@@ -146,13 +161,41 @@ class ChatService:
                 title=new_user_content[:20], conversation_id=conversation.id
             )
         await self.repository.add_message(new_db_user_message)
-        history = await self.repository.get_history_messages(
-            conversation_id=conversation_id, order="desc"
+        history = await self.repository.get_history_messages(conversation_id)
+        summary_message = None
+        history_for_context = history
+        if conversation.summary and conversation.summarized_through_message_id:
+            covered_index = next(
+                (
+                    index
+                    for index, message in enumerate(history)
+                    if message.id == conversation.summarized_through_message_id
+                ),
+                None,
+            )
+            if covered_index is not None:
+                candidate = LLMMessage(
+                    role=MessageRole.SYSTEM,
+                    content=f"此前对话摘要：\n{conversation.summary}",
+                )
+                if (
+                    get_input_token(candidate.content)
+                    + get_input_token(new_user_content)
+                    <= token_limit
+                ):
+                    summary_message = candidate
+                    history_for_context = history[covered_index + 1 :]
+
+        summary_tokens = (
+            get_input_token(summary_message.content) if summary_message else 0
         )
         context_info = valid_context_with_window(
-            messages=history,
-            contextWindow=token_limit,
+            messages=list(reversed(history_for_context)),
+            contextWindow=token_limit - summary_tokens,
         )
+        if summary_message:
+            context_info.messages.insert(0, summary_message)
+            context_info.used_token += summary_tokens
         return context_info
 
     async def start_new_chat(self, user_id: str) -> ConversationResponse:
@@ -171,11 +214,9 @@ class ChatService:
     async def get_single_conversation_history(
         self, user_id: str, conversation_id: str
     ) -> ConversationResponse | None:
-        conversation = await self.repository.get_conversation_by_id(conversation_id)
-        if not conversation:
-            raise AppException("未找到对话", "NOT_FOUND", 404)
-        if conversation.user_id != user_id:
-            raise AppException("无权访问该对话", "UNAUTHORIZED", 401)
+        conversation = await require_conversation_access(
+            user_id, conversation_id, self.repository
+        )
         db_messages = await self.repository.get_history_messages(conversation_id)
         return ConversationResponse(
             id=conversation.id,
@@ -183,11 +224,7 @@ class ChatService:
         )
 
     async def delete_conversation(self, user_id: str, conversation_id: str):
-        conversation = await self.repository.get_conversation_by_id(conversation_id)
-        if not conversation:
-            raise AppException("未找到对话", "NOT_FOUND", 404)
-        if conversation.user_id != user_id:
-            raise AppException("无权访问该对话", "UNAUTHORIZED", 401)
+        await require_conversation_access(user_id, conversation_id, self.repository)
         return await self.repository.delete_conversation(conversation_id)
 
     async def stop_request_message(
@@ -196,12 +233,76 @@ class ChatService:
         message_id: str,
         conversation_id: str,
     ):
-        conversation = await self.repository.get_conversation_by_id(conversation_id)
-        if not conversation:
-            raise AppException("未找到对话", "NOT_FOUND", 404)
-        if conversation.user_id != user_id:
-            raise AppException("无权访问该对话", "UNAUTHORIZED", 401)
+        await require_conversation_access(user_id, conversation_id, self.repository)
         message = await self.repository.find_message(conversation_id, message_id)
         if not message:
             raise AppException("未找到消息", "NOT_FOUND", 404)
         await generation_registry.cancel_and_wait(message_id)
+
+    async def update_summary(self, user_id: str, conversation_id: str) -> None:
+        conversation = await require_conversation_access(
+            user_id, conversation_id, self.repository
+        )
+        messages = await self.repository.get_history_messages(conversation_id)
+        covered_index = -1
+        if conversation.summarized_through_message_id:
+            covered_index = next(
+                (
+                    index
+                    for index, message in enumerate(messages)
+                    if message.id == conversation.summarized_through_message_id
+                ),
+                -1,
+            )
+            if covered_index < 0:
+                logger.warning("摘要覆盖消息不存在: %s", conversation_id)
+                return
+
+        pending = []
+        for message in messages[covered_index + 1 :]:
+            if message.status == MessageStatus.COMPLETED:
+                pending.append(message)
+
+        token_limit = self.client.context_window - self.client.max_output_len
+        if token_limit <= 0:
+            return
+        pending_tokens = sum(get_input_token(message.content) for message in pending)
+        previous_summary = conversation.summary
+        summary_tokens = get_input_token(previous_summary) if previous_summary else 0
+        trigger_tokens = min(int(token_limit * 0.7), SUMMARY_TRIGGER_TOKENS)
+        if summary_tokens + pending_tokens < trigger_tokens:
+            return
+
+        to_summarize = pending[-6:]
+        if not to_summarize:
+            return
+
+        expected_id = conversation.summarized_through_message_id
+        batch_budget = max(1, min(token_limit // 2, SUMMARY_BATCH_TOKENS))
+        batch = []
+        batch_tokens = 0
+        for message in to_summarize:
+            message_tokens = get_input_token(message.content)
+            if batch and batch_tokens + message_tokens > batch_budget:
+                previous_summary = await self.client.chat_summarize(
+                    previous_summary, valid_context(batch)
+                )
+                through_id = batch[-1].id
+                saved = await self.repository.update_summary(
+                    conversation_id, previous_summary, through_id, expected_id
+                )
+                if not saved:
+                    return
+                expected_id = through_id
+                batch = []
+                batch_tokens = 0
+            batch.append(message)
+            batch_tokens += message_tokens
+
+        if batch:
+            previous_summary = await self.client.chat_summarize(
+                previous_summary, valid_context(batch)
+            )
+            await self.repository.update_summary(
+                conversation_id, previous_summary, batch[-1].id, expected_id
+            )

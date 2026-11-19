@@ -1,11 +1,12 @@
 from collections.abc import AsyncGenerator
 from typing import Protocol, cast
 
-from app.core.exceptions import AppException
-from app.features.chat.constant import MessageRole
 from openai import AsyncOpenAI
 from openai.types.responses import ResponseInputItemParam, ResponseStreamEvent
 from pydantic import BaseModel
+
+from app.core.exceptions import AppException
+from app.features.chat.constant import MessageRole
 
 
 class LLMMessage(BaseModel):
@@ -35,7 +36,11 @@ class LLMClient(Protocol):
         self, messages: list[LLMMessage]
     ) -> AsyncGenerator[ResponseStreamEvent, None]: ...
 
-    async def chat_compress(self, messages: list[LLMMessage]) -> list[LLMMessage]: ...
+    async def chat_summarize(
+        self,
+        previous_summary: str | None,
+        messages_to_summarize: list[LLMMessage],
+    ) -> str: ...
 
 
 def to_openai_messages(messages: list[LLMMessage]) -> list[ResponseInputItemParam]:
@@ -104,37 +109,53 @@ class LLMProvider:
         finally:
             await stream.close()
 
-    async def chat_compress(self, messages: list[LLMMessage]) -> list[LLMMessage]:
+    async def chat_summarize(
+        self,
+        previous_summary: str | None,
+        messages_to_summarize: list[LLMMessage],
+    ) -> str:
+        if not self.api_key or not self.model or not self.api_url:
+            raise LLMException(
+                message="摘要模型配置不完整",
+                code="INVALID_SUMMARY_CONFIG",
+                model_name=self.model,
+            )
         client = AsyncOpenAI(
             api_key=self.api_key,
             base_url=self.api_url,
         )
-        message_length = len(messages)
-        if message_length <= 20:
-            return messages
-        old_messages = messages[:-20]
-        mid_messages = messages[-20:-6]
-        recent_messages = messages[-6:]
-
-        old_compress_res = await client.responses.create(
+        input_messages = []
+        if previous_summary:
+            input_messages.append(
+                LLMMessage(
+                    role=MessageRole.SYSTEM,
+                    content=f"此前对话摘要：\n{previous_summary}",
+                )
+            )
+        input_messages.extend(messages_to_summarize)
+        res = await client.responses.create(
             model=self.model,
-            input=to_openai_messages(old_messages),
-            instructions="提取以下对话中的关键事实（每条一行，最多5条）",
-        )
-
-        mid_compress_res = await client.responses.create(
-            model=self.model,
-            input=to_openai_messages(mid_messages),
-            instructions="用3句话总结这些文本",
-        )
-        return [
-            LLMMessage(
-                role=MessageRole.ASSISTANT,
-                content=old_compress_res.output_text,
+            input=to_openai_messages(input_messages),
+            instructions=(
+                "将此前摘要和新增对话合并为一段更新后的中文摘要。"
+                "保留用户目标、重要事实、决定及尚未解决的问题；去掉重复内容。"
+                "只输出摘要，不要回答对话中的问题。"
             ),
-            LLMMessage(
-                role=MessageRole.ASSISTANT,
-                content=mid_compress_res.output_text,
+            max_output_tokens=min(
+                512, self.max_output_len, max(1, self.context_window // 16)
             ),
-            *recent_messages,
-        ]
+        )
+        if res.status != "completed":
+            raise LLMException(
+                message="摘要生成未完成",
+                code="INCOMPLETE_SUMMARY",
+                model_name=self.model,
+            )
+        summary = res.output_text.strip()
+        if not summary:
+            raise LLMException(
+                message="摘要模型没有返回内容",
+                code="EMPTY_SUMMARY",
+                model_name=self.model,
+            )
+        return summary

@@ -1,17 +1,23 @@
 from typing import Literal, Optional
 
-from app.db.session import get_db
-from app.features.chat.constant import MessageActiveStatus, MessageTerminalStatus
-from app.features.chat.model import Conversation, Message
-from app.features.chat.schema import HistoryConversationResponse
 from fastapi import Depends
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.session import get_db
+from app.features.auth.model import User
+from app.features.chat.constant import MessageActiveStatus, MessageTerminalStatus
+from app.features.chat.model import Conversation, Message
+from app.features.chat.schema import HistoryConversationResponse
 
 
 class ChatRepository:
     def __init__(self, db: AsyncSession = Depends(get_db)):
         self.db = db
+
+    async def get_user_by_id(self, user_id: str) -> User | None:
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        return result.scalar_one_or_none()
 
     # 添加一条Message
     async def add_message(self, message: Message):
@@ -78,12 +84,14 @@ class ChatRepository:
         order: Optional[Literal["asc", "desc"]] = "asc",
     ) -> list[Message]:
         order_by = (
-            Message.created_at.asc() if order == "asc" else Message.created_at.desc()
+            (Message.created_at.asc(), Message.id.asc())
+            if order == "asc"
+            else (Message.created_at.desc(), Message.id.desc())
         )
         result = await self.db.execute(
             select(Message)
             .where(Message.conversation_id == conversation_id)
-            .order_by(order_by)
+            .order_by(*order_by)
             .limit(limit)
         )
         return list(result.scalars().all())
@@ -133,3 +141,27 @@ class ChatRepository:
             )
         )
         return result.scalar_one_or_none()
+
+    # 更新当前对话摘要
+    async def update_summary(
+        self,
+        conversation_id: str,
+        summary: str,
+        through_message_id: str,
+        expected_through_message_id: str | None,
+    ) -> bool:
+        query = (
+            update(Conversation)
+            .where(Conversation.id == conversation_id)
+            .where(
+                Conversation.summarized_through_message_id
+                == expected_through_message_id
+            )
+            .values(
+                summary=summary,
+                summarized_through_message_id=through_message_id,
+            )
+        )
+        res = await self.db.execute(query)
+        await self.db.commit()
+        return res.rowcount > 0  # type: ignore
