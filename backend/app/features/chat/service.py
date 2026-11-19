@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from app.core.exceptions import AppException
+from app.db.session import SessionLocal
 from app.features.chat.constant import MessageRole, MessageStatus
 from app.features.chat.context import valid_context, valid_context_with_window
 from app.features.chat.llm_events import (
@@ -43,6 +44,7 @@ if TYPE_CHECKING:
 from app.features.chat.generation_registry import generation_registry
 
 logger = logging.getLogger(__name__)
+summary_tasks: set[asyncio.Task[None]] = set()
 # Cap the trigger so very large configured context windows still get summaries.
 SUMMARY_TRIGGER_TOKENS = 8192
 SUMMARY_BATCH_TOKENS = 4096
@@ -99,13 +101,14 @@ class ChatService:
                             message, full_content, event.usage
                         )
                         response_completed = True
+                        summary_task = asyncio.create_task(
+                            update_summary_in_background(
+                                user_id, conversation_id, self.client
+                            )
+                        )
+                        summary_tasks.add(summary_task)
+                        summary_task.add_done_callback(summary_tasks.discard)
                         yield completed_event
-                        # try:
-                        #     await self.update_summary(user_id, conversation_id)
-                        # except Exception:
-                        #     logger.exception(
-                        #         "更新对话摘要失败: %s", conversation_id
-                        #     )
                         return
 
             raise UpstreamStreamInterrupted()
@@ -273,7 +276,8 @@ class ChatService:
         if summary_tokens + pending_tokens < trigger_tokens:
             return
 
-        to_summarize = pending[-6:]
+        # Keep the latest six completed messages in their original form.
+        to_summarize = pending[:-6]
         if not to_summarize:
             return
 
@@ -306,3 +310,17 @@ class ChatService:
             await self.repository.update_summary(
                 conversation_id, previous_summary, batch[-1].id, expected_id
             )
+
+
+async def update_summary_in_background(
+    user_id: str, conversation_id: str, client: LLMClient
+) -> None:
+    from app.features.chat.repository import ChatRepository
+
+    try:
+        async with SessionLocal() as session:
+            await ChatService(ChatRepository(session), client).update_summary(
+                user_id, conversation_id
+            )
+    except Exception:
+        logger.exception("更新对话摘要失败: %s", conversation_id)
