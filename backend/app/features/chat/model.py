@@ -38,9 +38,6 @@ class Conversation(Base):
     messages: Mapped[list["Message"]] = relationship(
         back_populates="conversation", cascade="all, delete-orphan"
     )
-    memories: Mapped[list["Memory"]] = relationship(
-        back_populates="conversation", cascade="all, delete-orphan"
-    )
 
 
 class Message(Base):
@@ -79,9 +76,6 @@ class Memory(Base):
     user_id: Mapped[str] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    conversation_id: Mapped[str] = mapped_column(
-        ForeignKey("conversation.id", ondelete="CASCADE"), nullable=False, index=True
-    )
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
@@ -94,4 +88,3 @@ class Memory(Base):
         server_default=text("CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)"),
     )
     user: Mapped["User"] = relationship(back_populates="memories")
-    conversation: Mapped["Conversation"] = relationship(back_populates="memories")
