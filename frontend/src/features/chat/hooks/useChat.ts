@@ -235,9 +235,12 @@ export const useChatStream = () => {
 export const useStartNewChat = () => {
   const messageApi = useMessageApi();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => chatApi.startNewChat(),
     onSuccess: (data: StartNewChatResponse) => {
+      queryClient.setQueryData<Conversation>(["chatHistory", data.id], data);
+      void queryClient.invalidateQueries({ queryKey: ["chatHistory"], exact: true });
       navigate(`/chat/${data.id}`);
     },
     onError: (error: Error) => {

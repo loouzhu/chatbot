@@ -41,7 +41,10 @@ export function ChatPanel() {
   };
 
   const handleStartNewChat = async () => {
+    if (isPending || isCreatingConversation) return;
+    await startNewChat();
     setInput("");
+
   };
 
   return (
@@ -49,7 +52,7 @@ export function ChatPanel() {
       <SideBar
         history={history}
         isHistoryLoading={isHistoryLoading}
-        isCreatingConversation={isCreatingConversation}
+        isCreatingConversation={isCreatingConversation || isPending}
         onStartNewChat={handleStartNewChat}
       />
       <section className={styles.mainPanel} aria-label="BlueChat 智能对话">
@@ -62,7 +65,7 @@ export function ChatPanel() {
           <Button
             className={styles.headerNewChat}
             icon={<PlusOutlined />}
-            disabled={isCreatingConversation}
+            disabled={isCreatingConversation || isPending}
             aria-label="新建对话"
             title="新建对话"
             onClick={handleStartNewChat}
