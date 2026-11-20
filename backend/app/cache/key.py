@@ -20,3 +20,4 @@ def send_limit_key(business: str, purpose: str, identifier: str) -> str:
         identifier=identifier,
         resource="send_limit",
     )
+

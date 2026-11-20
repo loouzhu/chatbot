@@ -66,7 +66,6 @@ class ChatService:
             conversation_id=conversation_id,
             user_id=user_id,
         )
-
         lifecycle = MessageLifecycle(self.repository)
         message = await lifecycle.create(conversation_id)
         message_id = message.id

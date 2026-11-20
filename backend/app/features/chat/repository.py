@@ -4,6 +4,7 @@ from fastapi import Depends
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import AppException
 from app.db.session import get_db
 from app.features.auth.model import User
 from app.features.chat.constant import MessageActiveStatus, MessageTerminalStatus
@@ -34,13 +35,13 @@ class ChatRepository:
         )
 
         if exist_message is None:
-            raise ValueError("消息不存在")
+            raise AppException("消息不存在", "NOT_FOUND", 404)
 
         if (
             exist_message.status in MessageTerminalStatus
             and message.status != exist_message.status
         ):
-            raise ValueError("终态不能修改")
+            raise AppException("终态不能修改", "MESSAGE_ALREADY_FINISHED", 409)
 
         query = (
             update(Message)

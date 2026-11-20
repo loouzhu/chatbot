@@ -3,8 +3,9 @@ export const API_BASE_URL =
   "http://101.37.70.188:8000";
 
 interface ApiErrorPayload {
-  detail?: string;
-  message?: string;
+  message: string;
+  code: string | null;
+  status_code: number;
 }
 
 export interface RequestOptions extends Omit<RequestInit, "body" | "headers"> {
@@ -15,12 +16,29 @@ export interface RequestOptions extends Omit<RequestInit, "body" | "headers"> {
 
 export class ApiError extends Error {
   readonly status: number;
+  readonly code: string | null;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code: string | null = null) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
+}
+
+export async function readApiError(response: Response): Promise<ApiError> {
+  const payload: unknown = await response.json().catch(() => null);
+  if (payload && typeof payload === "object") {
+    const error = payload as Partial<ApiErrorPayload>;
+    if (typeof error.message === "string" && error.message.trim()) {
+      return new ApiError(
+        error.message,
+        response.status,
+        typeof error.code === "string" ? error.code : null,
+      );
+    }
+  }
+  return new ApiError("请求失败，请稍后重试", response.status);
 }
 
 export async function request<T>(
@@ -44,20 +62,11 @@ export async function request<T>(
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  const payload = (await response.json().catch(() => null)) as unknown;
-
   if (!response.ok) {
-    const errorPayload = payload as ApiErrorPayload | null;
-    throw new ApiError(
-      errorPayload?.message ??
-        (typeof errorPayload?.detail === "string"
-          ? errorPayload.detail
-          : "请求失败，请稍后重试"),
-      response.status,
-    );
+    throw await readApiError(response);
   }
 
-  return payload as T;
+  return (await response.json().catch(() => null)) as T;
 }
 
 export function getErrorMessage(error: unknown): string {

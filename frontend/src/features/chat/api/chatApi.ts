@@ -1,4 +1,4 @@
-import { API_BASE_URL, ApiError, request } from "@shared/utils/request";
+import { API_BASE_URL, readApiError, request } from "@shared/utils/request";
 import type {
   SendMessageRequest,
   StartNewChatResponse,
@@ -28,7 +28,7 @@ export const chatApi = {
     });
 
     if (!response.ok) {
-      throw new ApiError("请求失败", response.status);
+      throw await readApiError(response);
     }
 
     if (!response.body) {

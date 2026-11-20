@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.features.auth.dependence import get_current_user
 from app.features.auth.model import User
+from app.features.chat.redis import send_message_limit
 from app.features.chat.repository import ChatRepository
 from app.features.chat.schema import (
     ConversationResponse,
@@ -37,6 +38,8 @@ async def request_message(
     user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
 ):
+    await send_message_limit(user.id)
+
     async def event_generator():
         async for event in service.stream_message(
             request.content,

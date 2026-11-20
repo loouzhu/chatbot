@@ -3,7 +3,7 @@ import random
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.cache.verify_code import send_limit_key, verify_code_key
+from app.cache.key import send_limit_key, verify_code_key
 from app.core.exceptions import AppException
 from app.core.security import hash_code
 from app.db.redis import redis_client
