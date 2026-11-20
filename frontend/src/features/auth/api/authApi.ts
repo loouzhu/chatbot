@@ -12,21 +12,24 @@ import { request } from "@shared/utils/request";
 export const authApi = {
   // 账密登录
   async loginWithPassword(input: PasswordLoginInput) {
-    return request<LoginResponse>("/auth/login/username", {
+    return request<LoginResponse>("/auth/session", {
+      method: "POST",
       body: { username: input.username, password: input.password },
     });
   },
 
   // 验证码登录
   async loginWithEmailCode(input: EmailCodeLoginInput) {
-    return request<LoginResponse>("/auth/login/email", {
+    return request<LoginResponse>("/auth/session", {
+      method: "POST",
       body: { email: input.email, verify_code: input.verifyCode },
     });
   },
 
   // 发送登录验证码
   async requestLoginCode(email: string): Promise<SendVerifyCodeResponse> {
-    return request<SendVerifyCodeResponse>("/auth/verify_code", {
+    return request<SendVerifyCodeResponse>("/auth/verification-code", {
+      method: "POST",
       body: { email, username: email, purpose: "login" },
     });
   },
@@ -36,14 +39,16 @@ export const authApi = {
     email: string,
     username: string,
   ): Promise<SendVerifyCodeResponse> {
-    return request<SendVerifyCodeResponse>("/auth/verify_code", {
+    return request<SendVerifyCodeResponse>("/auth/verification-code", {
+      method: "POST",
       body: { email, username, purpose: "register" },
     });
   },
 
   // 注册
   async register(input: RegisterInput): Promise<void> {
-    return request<void>("/auth/register", {
+    return request<void>("/auth/user", {
+      method: "POST",
       body: {
         email: input.email,
         username: input.username,
@@ -81,6 +86,6 @@ export const authApi = {
 
   // 退出登陆
   async logout() {
-    return request("/auth/logout", { auth: true });
+    return request("/auth/session", { method: "DELETE", auth: true });
   },
 };

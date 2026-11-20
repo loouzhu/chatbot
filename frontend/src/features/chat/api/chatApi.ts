@@ -1,4 +1,4 @@
-import { ApiError, request } from "@shared/utils/request";
+import { API_BASE_URL, ApiError, request } from "@shared/utils/request";
 import type {
   SendMessageRequest,
   StartNewChatResponse,
@@ -6,10 +6,6 @@ import type {
   Conversation,
   StreamResponse,
 } from "../types";
-
-const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  "http://101.37.70.188:8000";
 
 export const chatApi = {
   // 发送流式消息
@@ -23,11 +19,11 @@ export const chatApi = {
       "Content-Type": "application/json",
     });
     if (token) headers.set("Authorization", `Bearer ${token}`);
-    const response = await fetch(`${API_BASE_URL}/chat/request_message`, {
+    const response = await fetch(`${API_BASE_URL}/conversation/${encodeURIComponent(request.conversation_id)}/message`, {
       method: "POST",
       credentials: "include",
       headers,
-      body: JSON.stringify(request),
+      body: JSON.stringify({ content: request.content }),
       signal,
     });
 
@@ -65,14 +61,15 @@ export const chatApi = {
 
   // 开始新对话
   async startNewChat(): Promise<StartNewChatResponse> {
-    return request<StartNewChatResponse>("/chat/start_new_chat", {
+    return request<StartNewChatResponse>("/conversation", {
+      method: "POST",
       auth: true,
     });
   },
 
   // 显示对话历史记录
   async getAllChatHistory(): Promise<ChatHistoryItem[]> {
-    return request("/chat/history/all", {
+    return request("/conversation", {
       method: "GET",
       auth: true,
     });
@@ -80,7 +77,7 @@ export const chatApi = {
 
   // 获取单条对话历史记录消息
   async getOneChatHistory(conversationId: string): Promise<Conversation> {
-    return request(`/chat/history/${conversationId}`, {
+    return request(`/conversation/${encodeURIComponent(conversationId)}`, {
       method: "GET",
       auth: true,
     });
@@ -88,9 +85,8 @@ export const chatApi = {
 
   // 停止生成本次消息
   async stopGenerateMessage(conversationId: string, messageId: string) {
-    return request<void>(`/chat/stop_request_message/${conversationId}`, {
+    return request<void>(`/conversation/${encodeURIComponent(conversationId)}/message/${encodeURIComponent(messageId)}/cancellation`, {
       method: "POST",
-      body: { message_id: messageId },
       auth: true,
     });
   },

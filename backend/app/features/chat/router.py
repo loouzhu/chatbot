@@ -10,11 +10,10 @@ from app.features.chat.schema import (
     ConversationResponse,
     HistoryConversationResponse,
     MessageRequest,
-    StopRequest,
 )
 from app.features.chat.service import ChatService
 
-chat_router = APIRouter(prefix="/chat", tags=["Chat"])
+chat_router = APIRouter(prefix="/conversation", tags=["Chat"])
 
 
 async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
@@ -22,7 +21,7 @@ async def get_chat_service(db: AsyncSession = Depends(get_db)) -> ChatService:
 
 
 # 开始新对话
-@chat_router.post("/start_new_chat", response_model=ConversationResponse)
+@chat_router.post("", response_model=ConversationResponse)
 async def start_new_chat(
     user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
@@ -31,8 +30,9 @@ async def start_new_chat(
 
 
 # 生成一条回答
-@chat_router.post("/request_message", response_model=None)
+@chat_router.post("/{conversation_id}/message", response_model=None)
 async def request_message(
+    conversation_id: str,
     request: MessageRequest,
     user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
@@ -40,7 +40,7 @@ async def request_message(
     async def event_generator():
         async for event in service.stream_message(
             request.content,
-            request.conversation_id,
+            conversation_id,
             user.id,
         ):
             yield f"data: {event.model_dump_json()}\n\n"
@@ -52,7 +52,7 @@ async def request_message(
 
 
 # 获取所有历史对话
-@chat_router.get("/history/all", response_model=list[HistoryConversationResponse])
+@chat_router.get("", response_model=list[HistoryConversationResponse])
 async def all_conversation_history(
     user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
@@ -61,7 +61,7 @@ async def all_conversation_history(
 
 
 # 获取某一条历史对话
-@chat_router.get("/history/{conversation_id}")
+@chat_router.get("/{conversation_id}")
 async def single_conversation_history(
     conversation_id: str,
     user: User = Depends(get_current_user),
@@ -71,7 +71,7 @@ async def single_conversation_history(
 
 
 # 删除一条历史对话
-@chat_router.delete("/delete_conversation")
+@chat_router.delete("/{conversation_id}")
 async def delete_conversation(
     conversation_id: str,
     user: User = Depends(get_current_user),
@@ -81,11 +81,11 @@ async def delete_conversation(
 
 
 # 停止生成回答
-@chat_router.post("/stop_request_message/{conversation_id}")
+@chat_router.post("/{conversation_id}/message/{message_id}/cancellation")
 async def stop_request_message(
     conversation_id: str,
-    body: StopRequest,
+    message_id: str,
     user: User = Depends(get_current_user),
     service: ChatService = Depends(get_chat_service),
 ):
-    await service.stop_request_message(user.id, body.message_id, conversation_id)
+    await service.stop_request_message(user.id, message_id, conversation_id)

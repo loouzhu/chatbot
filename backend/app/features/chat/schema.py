@@ -9,7 +9,6 @@ from pydantic import BaseModel, Field, field_validator
 
 # 输入消息模型
 class MessageRequest(BaseModel):
-    conversation_id: str
     content: str = Field(min_length=1, max_length=1000)
 
     @field_validator("content")
@@ -119,8 +118,3 @@ class ContextInfo(BaseModel):
 # 上游中断异常
 class UpstreamStreamInterrupted(Exception):
     pass
-
-
-# 中断当前对话请求体
-class StopRequest(BaseModel):
-    message_id: str
