@@ -1,12 +1,11 @@
 from collections.abc import AsyncGenerator
 from typing import Protocol, cast
 
+from app.core.exceptions import AppException
+from app.features.chat.constant import MessageRole
 from openai import AsyncOpenAI
 from openai.types.responses import ResponseInputItemParam, ResponseStreamEvent
 from pydantic import BaseModel
-
-from app.core.exceptions import AppException
-from app.features.chat.constant import MessageRole
 
 
 class LLMMessage(BaseModel):
