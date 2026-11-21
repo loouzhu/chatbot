@@ -1,15 +1,15 @@
 from typing import Literal, Optional
-
-from fastapi import Depends
-from sqlalchemy import delete, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import uuid4
 
 from app.core.exceptions import AppException
 from app.db.session import get_db
 from app.features.auth.model import User
 from app.features.chat.constant import MessageActiveStatus, MessageTerminalStatus
-from app.features.chat.model import Conversation, Message
+from app.features.chat.model import Conversation, Memory, Message
 from app.features.chat.schema import HistoryConversationResponse
+from fastapi import Depends
+from sqlalchemy import delete, insert, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class ChatRepository:
@@ -166,3 +166,31 @@ class ChatRepository:
         res = await self.db.execute(query)
         await self.db.commit()
         return res.rowcount > 0  # type: ignore
+
+    # 更新当前用户的长期记忆
+    async def update_long_term_memory(
+        self,
+        user_id: str,
+        new_long_term_memory: str,
+    ):
+        query = insert(Memory).values(
+            id=str(uuid4()),
+            user_id=user_id,
+            value=new_long_term_memory,
+        )
+        res = await self.db.execute(query)
+        await self.db.commit()
+        return res.rowcount > 0  # type: ignore
+
+    # 获取当前用户的长期记忆
+    async def get_long_term_memory(
+        self,
+        user_id: str,
+    ) -> list[Memory]:
+        query = (
+            select(Memory)
+            .where(Memory.user_id == user_id, Memory.status == "active")
+            .order_by(Memory.updated_at.desc(), Memory.id.desc())
+        )
+        res = await self.db.execute(query)
+        return list(res.scalars().all())

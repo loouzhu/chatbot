@@ -41,6 +41,11 @@ class LLMClient(Protocol):
         messages_to_summarize: list[LLMMessage],
     ) -> str: ...
 
+    async def long_term_memory(
+        self,
+        message: str,
+    ) -> str: ...
+
 
 def to_openai_messages(messages: list[LLMMessage]) -> list[ResponseInputItemParam]:
     return [
@@ -154,6 +159,37 @@ class LLMProvider:
         if not summary:
             raise LLMException(
                 message="摘要模型没有返回内容",
+                code="EMPTY_SUMMARY",
+                model_name=self.model,
+            )
+        return summary
+
+    async def long_term_memory(self, message: str):
+        if not self.api_key or not self.model or not self.api_url:
+            raise LLMException(
+                message="摘要模型配置不完整",
+                code="INVALID_SUMMARY_CONFIG",
+                model_name=self.model,
+            )
+        client = AsyncOpenAI(
+            api_key=self.api_key,
+            base_url=self.api_url,
+        )
+        res = await client.responses.create(
+            model=self.model,
+            input=message,
+            instructions="从用户输入中提取值得记住的事实，例如用户偏好，要求，性格等，生成一个短句或者多个关键词",
+        )
+        if res.status != "completed":
+            raise LLMException(
+                message="长期记忆生成未完成",
+                code="INCOMPLETE_SUMMARY",
+                model_name=self.model,
+            )
+        summary = res.output_text.strip()
+        if not summary:
+            raise LLMException(
+                message="模型没有返回内容",
                 code="EMPTY_SUMMARY",
                 model_name=self.model,
             )

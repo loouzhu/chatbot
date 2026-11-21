@@ -1,10 +1,20 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
+from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.mysql import DATETIME
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from app.db.base import Base
 from app.features.chat.constant import MessageRole, MessageStatus
 
@@ -71,12 +81,31 @@ class Message(Base):
 
 class Memory(Base):
     __tablename__ = "memory"
+    __table_args__ = (
+        UniqueConstraint("user_id", "key", name="uq_memory_user_key"),
+        CheckConstraint(
+            "confidence >= 0 AND confidence <= 1", name="ck_memory_confidence"
+        ),
+        CheckConstraint(
+            "status IN ('active', 'inactive')", name="ck_memory_status"
+        ),
+    )
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
+    id: Mapped[str] = mapped_column(
+        String(64), default=lambda: str(uuid4()), primary_key=True, index=True
+    )
     user_id: Mapped[str] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    content: Mapped[str] = mapped_column(Text, nullable=False)
+    key: Mapped[str | None] = mapped_column(String(191), nullable=True)
+    value: Mapped[str] = mapped_column(Text, nullable=False)
+    source_message_id: Mapped[str | None] = mapped_column(
+        ForeignKey("message.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="active", server_default="active"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True).with_variant(DATETIME(timezone=True, fsp=6), "mysql"),
         nullable=False,

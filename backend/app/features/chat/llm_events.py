@@ -4,10 +4,9 @@ from collections.abc import AsyncGenerator
 from contextlib import aclosing
 from dataclasses import dataclass
 
-from openai import APIConnectionError, APIStatusError, APITimeoutError
-
 from app.features.chat.schema import TokenUsage
 from app.integrations.llm.base import LLMClient, LLMMessage
+from openai import APIConnectionError, APIStatusError, APITimeoutError
 
 
 @dataclass(frozen=True)
