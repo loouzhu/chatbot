@@ -8,6 +8,7 @@ from app.features.auth import model as auth_model  # noqa: F401
 # 必须导入所有包含 SQLAlchemy 模型的模块
 from app.features.auth import model as auth_model  # noqa: F401
 from app.features.chat import model as chat_model  # noqa: F401
+from app.features.rag import model as rag_model  # noqa: F401
 from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
